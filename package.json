@@ -1,6 +1,6 @@
 {
-  "name": "wxt-vue-starter",
-  "description": "manifest.json description",
+  "name": "line-pulse",
+  "description": "LinePulse - Browser Extension",
   "private": true,
   "version": "0.0.0",
   "type": "module",
