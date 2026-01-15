@@ -1,6 +1,6 @@
 {
   "name": "line-pulse",
-  "description": "LinePulse - Browser Extension",
+  "description": "Quickly count github repo lines of code",
   "private": true,
   "version": "0.0.0",
   "type": "module",
