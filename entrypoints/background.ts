@@ -17,6 +17,40 @@ interface AnalyzeResponse {
   error?: string;
 }
 
+interface LanguageStats { name: string; lines: number; color: string; }
+interface Stats { total: number; files: number; languages: LanguageStats[]; }
+
+// WASM module reference
+let wasmModule: any = null;
+
+// Initialize WASM module
+async function initWasm(): Promise<void> {
+  if (wasmModule) return;
+
+  // @ts-ignore - wasm_bindgen is loaded globally
+  const wasm = await import('/wasm/pkg/line_pulse_wasm.js');
+  // @ts-ignore
+  await wasm.default('/wasm/pkg/line_pulse_wasm_bg.wasm');
+  // @ts-ignore
+  wasmModule = { analyze_code: wasm.analyze_code };
+}
+
+// Analyze using Rust WASM
+function analyzeWithWasm(files: Record<string, string>): Stats {
+  const json = JSON.stringify(files);
+  const result = JSON.parse(wasmModule.analyze_code(json));
+
+  return {
+    total: result.total,
+    files: result.files,
+    languages: result.languages.map((l: any) => ({
+      name: l.name,
+      lines: l.lines,
+      color: l.color
+    }))
+  };
+}
+
 export default defineBackground(() => {
   browser.runtime.onMessage.addListener(async (message: { type: string; payload?: AnalyzeRequest }, _sender: any, sendResponse: (response: AnalyzeResponse) => void) => {
     if (message.type === 'ANALYZE_REPO') {
@@ -32,12 +66,12 @@ export default defineBackground(() => {
       // Send immediate acknowledgment
       sendResponse({ success: true, requestId });
 
-      // New: do full analysis in background and store result
       const payload = message.payload;
       if (!payload) {
         await browser.storage.local.set({ [`result_${requestId}`]: { success: false, error: 'Invalid request' } });
         return true;
       }
+
       const { owner, repo, branch } = payload;
       const branches = branch ? [branch, 'main', 'master'] : ['main', 'master'];
 
@@ -77,8 +111,9 @@ export default defineBackground(() => {
           return true;
         }
 
-        // Step 3: Analyze - we'll do a simple line count per extension
-        const stats = analyzeFiles(files);
+        // Step 3: Analyze with Rust WASM
+        await initWasm();
+        const stats = analyzeWithWasm(files);
         await browser.storage.local.set({ [`result_${requestId}`]: { success: true, data: { owner, repo, stats } } });
       } catch (err) {
         await browser.storage.local.set({ [`result_${requestId}`]: { success: false, error: err instanceof Error ? err.message : 'Unknown error' } });
@@ -199,52 +234,4 @@ async function unzip(base64Data: string): Promise<Record<string, string>> {
   }
 
   return files;
-}
-
-interface LanguageStats { name: string; lines: number; color: string; }
-interface Stats { total: number; files: number; languages: LanguageStats[]; }
-
-const LANGUAGE_COLORS: Record<string, string> = {
-  JavaScript: '#f1e05a', TypeScript: '#2b7489', Python: '#3572A5', Java: '#b07219',
-  Go: '#00ADD8', Rust: '#dea584', C: '#555555', 'CPlusPlus': '#f34b7d', 'CSharp': '#178600',
-  Ruby: '#701516', PHP: '#4F5D95', Swift: '#F05138', Kotlin: '#A97BFF',
-  Vue: '#41b883', HTML: '#e34c26', CSS: '#563d7c', JSON: '#292929',
-  Markdown: '#083fa1', YAML: '#cb171e', Shell: '#89e051', SQL: '#e38c00',
-};
-
-const EXT_TO_LANG: Record<string, string> = {
-  js: 'JavaScript', jsx: 'JavaScript', ts: 'TypeScript', tsx: 'TypeScript',
-  py: 'Python', java: 'Java', go: 'Go', rs: 'Rust', c: 'C', cpp: 'CPlusPlus', cc: 'CPlusPlus',
-  cxx: 'CPlusPlus', h: 'C', hpp: 'CPlusPlus', cs: 'CSharp', rb: 'Ruby', php: 'PHP', swift: 'Swift',
-  kt: 'Kotlin', kts: 'Kotlin', vue: 'Vue', html: 'HTML', htm: 'HTML',
-  css: 'CSS', scss: 'CSS', sass: 'CSS', less: 'CSS', json: 'JSON', md: 'Markdown',
-  mdx: 'Markdown', yaml: 'YAML', yml: 'YAML', sh: 'Shell', bash: 'Shell',
-  sql: 'SQL', xml: 'XML', toml: 'TOML', dockerfile: 'Dockerfile',
-};
-
-function analyzeFiles(files: Record<string, string>): Stats {
-  const langLines: Record<string, number> = {};
-  let totalLines = 0;
-  let fileCount = 0;
-
-  for (const [path, content] of Object.entries(files)) {
-    const ext = path.split('.').pop()?.toLowerCase() || '';
-    const lang = EXT_TO_LANG[ext] || 'Other';
-
-    const lines = content.split('\n').length;
-    langLines[lang] = (langLines[lang] || 0) + lines;
-    totalLines += lines;
-    fileCount++;
-  }
-
-  const languages: LanguageStats[] = Object.entries(langLines)
-    .map(([name, lines]) => ({
-      name,
-      lines,
-      color: LANGUAGE_COLORS[name] || '#6e7681',
-    }))
-    .sort((a, b) => b.lines - a.lines)
-    .slice(0, 10);
-
-  return { total: totalLines, files: fileCount, languages };
 }
