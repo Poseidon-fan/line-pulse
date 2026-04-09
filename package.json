@@ -1,8 +1,8 @@
 {
   "name": "line-pulse",
-  "description": "Quickly count github repo lines of code",
+  "description": "Quickly count GitHub repo lines of code",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "wxt",
@@ -11,7 +11,6 @@
     "build:firefox": "wxt build -b firefox",
     "zip": "wxt zip",
     "zip:firefox": "wxt zip -b firefox",
-    "compile": "vue-tsc --noEmit",
     "postinstall": "wxt prepare"
   },
   "dependencies": {
@@ -19,15 +18,9 @@
     "vue": "^3.5.25"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4.2.2",
-    "@types/bun": "latest",
     "@types/pako": "^2.0.4",
     "@wxt-dev/module-vue": "^1.0.3",
-    "autoprefixer": "^10.4.27",
-    "postcss": "^8.5.9",
-    "tailwindcss": "^4.2.2",
     "typescript": "^5.9.3",
-    "vue-tsc": "^3.1.8",
     "wxt": "^0.20.6"
   }
 }

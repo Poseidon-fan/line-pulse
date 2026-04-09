@@ -1,24 +1,45 @@
-# WXT + Vue 3
+# Line Pulse
 
-This template should help get you started developing with Vue 3 in WXT.
+A browser extension that analyzes GitHub repositories and shows code line statistics.
 
-## Recommended IDE Setup
+## Features
 
-- [VS Code](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar).
+- One-click code line analysis on any GitHub repository
+- Language breakdown with color-coded statistics
+- Fast and private - all analysis runs locally in your browser
+- Supports dark/light mode
 
-## Build
-1. Install [Rust](https://rust-lang.org/tools/install/) and [bun](https://bun.com/) on your device.
-2. Build wasm:
-    ```bash
-    cargo install wasm-pack
-    wasm-pack build wasm --target web
-    ```
-3. Install npm dependencies: 
-    ```bash
-    bun install
-    ```
-4. Run in dev mode:
-    ```bash
-    bun run dev
-    ```
+## Development
 
+### Prerequisites
+
+- [Rust](https://rust-lang.org/tools/install/)
+- [Bun](https://bun.com/)
+
+### Build
+
+```bash
+# Install WASM toolchain (first time only)
+cargo install wasm-pack
+
+# Build WASM module
+wasm-pack build ./wasm --target web
+
+# Install dependencies
+bun install
+
+# Run in dev mode
+bun run dev
+```
+
+### Build for production
+
+```bash
+bun run build
+```
+
+## Tech Stack
+
+- **Frontend**: Vue 3 + TypeScript
+- **Analysis Engine**: Rust (WASM)
+- **Build Tool**: WXT

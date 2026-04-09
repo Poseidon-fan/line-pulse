@@ -8,8 +8,6 @@ export default defineConfig({
     description: 'Quickly count GitHub repo lines of code',
     permissions: ['activeTab', 'storage'],
     host_permissions: [
-      'https://github.com/*',
-      'https://api.github.com/*',
       'https://codeload.github.com/*',
     ],
   },
