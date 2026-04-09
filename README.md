@@ -11,7 +11,7 @@ This template should help get you started developing with Vue 3 in WXT.
 2. Build wasm:
     ```bash
     cargo install wasm-pack
-    wasm-pack build --target web
+    wasm-pack build wasm --target web
     ```
 3. Install npm dependencies: 
     ```bash
