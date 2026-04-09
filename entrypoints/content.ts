@@ -152,7 +152,6 @@ export default defineContentScript({
           .lp-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
           .lp-repo { font-size: 13px; color: ${theme.fgSecondary}; }
           .lp-repo strong { color: ${theme.fg}; font-weight: 600; }
-          .lp-badge { font-size: 10px; padding: 2px 8px; background: linear-gradient(135deg, #238636, #2ea043); color: white; border-radius: 4px; font-weight: 600; }
           .lp-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
           .lp-stat { text-align: center; padding: 14px 8px; background: ${theme.cardBg}; border-radius: 10px; border: 1px solid ${theme.border}; }
           .lp-stat-value { display: block; font-size: 22px; font-weight: 700; color: ${theme.fg}; line-height: 1.2; }
@@ -170,7 +169,6 @@ export default defineContentScript({
 
         <div class="lp-header">
           <span class="lp-repo"><strong>${owner}</strong>/${repo}</span>
-          <span class="lp-badge">Line Pulse</span>
         </div>
 
         <div class="lp-stats">
