@@ -1,7 +1,24 @@
 import pako from 'pako';
 
+interface AnalyzeRequest {
+  owner: string;
+  repo: string;
+  branch: string;
+}
+
+interface AnalyzeResponse {
+  success: boolean;
+  requestId?: string;
+  data?: {
+    owner: string;
+    repo: string;
+    stats: any;
+  };
+  error?: string;
+}
+
 export default defineBackground(() => {
-  browser.runtime.onMessage.addListener(async (message, _sender, sendResponse) => {
+  browser.runtime.onMessage.addListener(async (message: { type: string; payload?: AnalyzeRequest }, _sender: any, sendResponse: (response: AnalyzeResponse) => void) => {
     if (message.type === 'ANALYZE_REPO') {
       browser.storage.local.set({ pendingAnalysis: message.payload })
         .then(() => browser.action.openPopup());
@@ -16,10 +33,15 @@ export default defineBackground(() => {
       sendResponse({ success: true, requestId });
 
       // New: do full analysis in background and store result
-      const { owner, repo, branch } = message.payload;
+      const payload = message.payload;
+      if (!payload) {
+        await browser.storage.local.set({ [`result_${requestId}`]: { success: false, error: 'Invalid request' } });
+        return true;
+      }
+      const { owner, repo, branch } = payload;
       const branches = branch ? [branch, 'main', 'master'] : ['main', 'master'];
 
-      const stored = await browser.storage.local.get('githubToken');
+      const stored = await browser.storage.local.get('githubToken') as { githubToken?: string };
       const token = stored.githubToken || '';
 
       try {
@@ -65,10 +87,15 @@ export default defineBackground(() => {
     }
 
     if (message.type === 'DOWNLOAD_REPO') {
-      const { owner, repo, branch } = message.payload;
+      const payload = message.payload;
+      if (!payload) {
+        sendResponse({ success: false, error: 'Invalid request' });
+        return true;
+      }
+      const { owner, repo, branch } = payload;
       const branches = branch ? [branch, 'main', 'master'] : ['main', 'master'];
 
-      const stored = await browser.storage.local.get('githubToken');
+      const stored = await browser.storage.local.get('githubToken') as { githubToken?: string };
       const token = stored.githubToken || '';
 
       const download = async (): Promise<{ success: boolean; data?: string; error?: string }> => {
@@ -92,7 +119,7 @@ export default defineBackground(() => {
         return { success: false, error: 'Could not download repository' };
       };
 
-      download().then(sendResponse);
+      download().then((result) => sendResponse(result as any));
       return true;
     }
   });

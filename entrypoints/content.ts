@@ -1,3 +1,6 @@
+interface LanguageStats { name: string; lines: number; color: string; }
+interface Stats { total: number; files: number; languages: LanguageStats[]; }
+
 export default defineContentScript({
   matches: ['*://github.com/*'],
   main() {
@@ -77,13 +80,13 @@ export default defineContentScript({
       `;
     }
 
-    function showResults(container: HTMLElement, owner: string, repo: string, stats: any) {
+    function showResults(container: HTMLElement, owner: string, repo: string, stats: Stats) {
       const cardBg = container.dataset.cardBg || '#f6f8fa';
       const barBg = container.dataset.barBg || '#eeeeee';
       const fg = container.dataset.fg || '#24292f';
       const fgSecondary = container.dataset.fgSecondary || '#57606a';
 
-      const langRows = stats.languages.map((lang: any) => `
+      const langRows = stats.languages.map((lang: LanguageStats) => `
         <div style="display:flex;flex-direction:column;gap:4px;">
           <div style="display:flex;align-items:center;gap:8px;">
             <span style="width:12px;height:12px;border-radius:3px;background:${lang.color};"></span>
@@ -163,11 +166,11 @@ export default defineContentScript({
         btn.innerHTML = `<svg class="spinner" width="16" height="16" viewBox="0 0 16 16" fill="none" style="margin-right:6px"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="2" stroke-opacity="0.25"/><path d="M14 8a6 6 0 00-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Analyzing...`;
 
         try {
-          const response = await new Promise((resolve, reject) => {
+          const response = await new Promise<{ success: boolean; requestId?: string }>((resolve, reject) => {
             browser.runtime.sendMessage({
               type: 'ANALYZE_REPO_FULL',
               payload: repo
-            }, (response) => {
+            }, (response: any) => {
               if (browser.runtime.lastError) {
                 reject(new Error(browser.runtime.lastError.message));
               } else {
@@ -182,13 +185,14 @@ export default defineContentScript({
           }
 
           // Poll for result
-          let result = null;
+          let result: { success: boolean; data?: any; error?: string } | null = null;
+          const resultKey = `result_${response.requestId}`;
           for (let i = 0; i < 50; i++) {
             await new Promise(r => setTimeout(r, 200));
-            const stored = await browser.storage.local.get(`result_${response.requestId}`);
-            if (stored[`result_${response.requestId}`]) {
-              result = stored[`result_${response.requestId}`];
-              await browser.storage.local.remove(`result_${response.requestId}`);
+            const stored = await browser.storage.local.get(resultKey);
+            if (stored[resultKey]) {
+              result = stored[resultKey] as { success: boolean; data?: any; error?: string };
+              await browser.storage.local.remove(resultKey);
               break;
             }
           }

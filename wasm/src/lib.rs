@@ -168,7 +168,6 @@ fn detect_language(filename: &str, ext: &str) -> &'static str {
         "ts" | "tsx" | "mts" | "cts" | "d.ts" => "TypeScript",
         "vue" => "Vue",
         "svelte" => "Svelte",
-        "jsx" => "JavaScript",
 
         // Python
         "py" | "pyw" | "pyx" | "pyi" | "rpy" | "cpython" => "Python",
@@ -226,7 +225,7 @@ fn detect_language(filename: &str, ext: &str) -> &'static str {
         // Build tools
         "makefile" | "gnumakefile" | "mk" => "Makefile",
         "cmake" | "CMakeLists.txt" => "CMake",
-        "ninja" | "ninja" => "Ninja",
+        "ninja" => "Ninja",
 
         // Scripting
         "rb" | "erb" | "rake" | "gemspec" => "Ruby",
@@ -242,9 +241,8 @@ fn detect_language(filename: &str, ext: &str) -> &'static str {
         "ex" | "exs" => "Elixir",
         "erl" | "hrl" => "Erlang",
         "clj" | "cljs" | "cljc" | "edn" => "Clojure",
-        "ml" | "mli" | "fs" | "fsx" | "fsi" => "OCaml",
-        "fs" | "fsx" => "F#",
-        "rs" | "rlib" => "Rust",
+        "ml" | "mli" => "OCaml",
+        "fs" | "fsx" | "fsi" => "F#",
 
         // Modern
         "dart" => "Dart",
@@ -260,9 +258,8 @@ fn detect_language(filename: &str, ext: &str) -> &'static str {
 
         // Other
         "asm" | "s" | "S" | "inc" => "Assembly",
-        "pas" | "pp" | "inc" => "Pascal",
+        "pas" | "pp" => "Pascal",
         "lisp" | "scm" | "ss" | "rkt" => "Scheme",
-        "scm" => "Scheme",
         "vim" | "vimrc" | "gvimrc" => "Vim script",
         "el" | "elc" => "Emacs Lisp",
         "ahk" | "ahkl" => "AutoHotkey",
@@ -274,7 +271,7 @@ fn detect_language(filename: &str, ext: &str) -> &'static str {
         "smarty" | "tpl" => "Smarty",
         "jinja" | "jinja2" => "Jinja",
         "handlebars" | "hbs" => "Handlebars",
-        "mustache" | "mustache" => "Mustache",
+        "mustache" => "Mustache",
         "ejs" | "ect" => "EJS",
         "pug" | "jade" => "Pug",
 
@@ -302,7 +299,7 @@ fn detect_by_filename(filename: &str) -> &'static str {
         "tsconfig.json" => "JSON",
         ".gitignore" | ".dockerignore" | ".editorconfig" => "Config",
         ".env" | ".env.local" | ".env.example" => "Env",
-        "gemfile" | "rakefile" | "rakefile" => "Ruby",
+        "gemfile" | "rakefile" => "Ruby",
         "cargo.toml" | "cargo.lock" => "Rust",
         "go.mod" | "go.sum" => "Go",
         "pubspec.yaml" => "Dart",
