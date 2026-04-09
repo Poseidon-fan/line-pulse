@@ -15,6 +15,7 @@
     "postinstall": "wxt prepare"
   },
   "dependencies": {
+    "pako": "^2.1.0",
     "vue": "^3.5.25"
   },
   "devDependencies": {
