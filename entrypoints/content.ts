@@ -33,6 +33,9 @@ export default defineContentScript({
       let container = document.getElementById('line-pulse-results');
       if (container) container.remove();
 
+      // Remove any existing outside click handler
+      document.removeEventListener('click', handleOutsideClick);
+
       const dark = isDarkMode();
       const theme = {
         bg: dark ? '#0d1117' : '#ffffff',
@@ -80,6 +83,20 @@ export default defineContentScript({
       container.dataset.theme = JSON.stringify(theme);
       btn.parentElement!.style.position = 'relative';
       btn.parentElement!.appendChild(container);
+
+      // Add click outside handler to close popup
+      function handleOutsideClick(e: MouseEvent) {
+        const target = e.target as HTMLElement;
+        if (!container?.contains(target) && target !== btn && !btn.contains(target)) {
+          container?.remove();
+          document.removeEventListener('click', handleOutsideClick);
+        }
+      }
+      // Use setTimeout to avoid immediate trigger
+      setTimeout(() => {
+        document.addEventListener('click', handleOutsideClick);
+      }, 0);
+
       return container;
     }
 
