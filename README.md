@@ -1,4 +1,8 @@
-# Line Pulse ⚡
+<p align="center">
+  <img src="doc/icon.png" width="128" height="128" alt="Line Pulse">
+</p>
+
+<h1 align="center">Line Pulse ⚡</h1>
 
 <p align="center">
   <a href="https://github.com/poseidon-fan/line-pulse/stargazers">
