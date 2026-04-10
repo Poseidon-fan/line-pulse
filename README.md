@@ -5,14 +5,14 @@
 <h1 align="center">Line Pulse ⚡</h1>
 
 <p align="center">
-  <a href="https://github.com/poseidon-fan/line-pulse/stargazers">
-    <img src="https://img.shields.io/github/stars/poseidon-fan/line-pulse?style=flat&color=238636" alt="stars">
+  <a href="https://github.com/Poseidon-fan/line-pulse/stargazers">
+    <img src="https://img.shields.io/github/stars/Poseidon-fan/line-pulse?style=flat&color=238636" alt="stars">
   </a>
-  <a href="https://github.com/poseidon-fan/line-pulse/issues">
-    <img src="https://img.shields.io/github/issues/poseidon-fan/line-pulse?style=flat&color=238636" alt="issues">
+  <a href="https://github.com/Poseidon-fan/line-pulse/issues">
+    <img src="https://img.shields.io/github/issues/Poseidon-fan/line-pulse?style=flat&color=238636" alt="issues">
   </a>
-  <a href="https://github.com/poseidon-fan/line-pulse/blob/master/LICENSE">
-    <img src="https://img.shields.io/github/license/poseidon-fan/line-pulse?style=flat&color=238636" alt="license">
+  <a href="https://github.com/Poseidon-fan/line-pulse/blob/master/LICENSE">
+    <img src="https://img.shields.io/github/license/Poseidon-fan/line-pulse?style=flat&color=238636" alt="license">
   </a>
 </p>
 
