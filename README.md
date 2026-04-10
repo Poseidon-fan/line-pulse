@@ -18,6 +18,10 @@
 
 > A lightning-fast GitHub repository code statistics browser extension.
 
+<p align="center">
+  <img src="doc/desc.png" width="720" alt="Line Pulse Demo">
+</p>
+
 ## The Problem
 
 Sometimes you just want to quickly know the size of a GitHub repository — how many lines of code, what languages are used, and the overall codebase scale. Normally, this requires:
