@@ -37,5 +37,8 @@ export async function downloadRepoZip(
   if (accessDenied) {
     return { error: 'Access denied. Please set your GitHub token in the extension popup for private repositories.' };
   }
-  return { error: 'Could not download repository. The default branch may not be main or master.' };
+  if (!token) {
+    return { error: 'Repository not found. If this is a private repo, set your GitHub token in the extension popup.' };
+  }
+  return { error: 'Could not download repository.' };
 }
