@@ -79,6 +79,9 @@ export default defineBackground(() => {
       const token = stored.githubToken || '';
 
       try {
+        const debug = import.meta.env.DEV;
+        const t0 = debug ? performance.now() : 0;
+
         // Step 1: Download
         let zipData: string | null = null;
         let lastStatus: number | null = null;
@@ -115,9 +118,17 @@ export default defineBackground(() => {
           return true;
         }
 
+        const t1 = debug ? performance.now() : 0;
+        if (debug) console.log(`[Line Pulse] Download: ${(t1 - t0).toFixed(0)}ms`);
+
         // Step 2: Unzip
         const files = await unzip(zipData);
-        if (Object.keys(files).length === 0) {
+        const fileCount = Object.keys(files).length;
+
+        const t2 = debug ? performance.now() : 0;
+        if (debug) console.log(`[Line Pulse] Unzip: ${(t2 - t1).toFixed(0)}ms (${fileCount} files)`);
+
+        if (fileCount === 0) {
           await browser.storage.local.set({ [`result_${requestId}`]: { success: false, error: 'No files extracted' } });
           return true;
         }
@@ -125,6 +136,11 @@ export default defineBackground(() => {
         // Step 3: Analyze with Rust WASM
         await initWasm();
         const stats = analyzeWithWasm(files);
+
+        const t3 = debug ? performance.now() : 0;
+        if (debug) console.log(`[Line Pulse] WASM analyze: ${(t3 - t2).toFixed(0)}ms`);
+        if (debug) console.log(`[Line Pulse] Total: ${(t3 - t0).toFixed(0)}ms`);
+
         await browser.storage.local.set({ [`result_${requestId}`]: { success: true, data: { owner, repo, stats } } });
       } catch (err) {
         await browser.storage.local.set({ [`result_${requestId}`]: { success: false, error: err instanceof Error ? err.message : 'Unknown error' } });
