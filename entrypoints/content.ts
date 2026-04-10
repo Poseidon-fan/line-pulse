@@ -283,9 +283,14 @@ export default defineContentScript({
             return;
           }
 
+          // Get timeout from storage (default 15s)
+          const timeoutConfig = await browser.storage.local.get('analysisTimeout') as { analysisTimeout?: number };
+          const timeoutSeconds = timeoutConfig.analysisTimeout || 15;
+          const maxIterations = timeoutSeconds * 5; // 200ms per iteration
+
           let result: { success: boolean; data?: any; error?: string } | null = null;
           const resultKey = `result_${response.requestId}`;
-          for (let i = 0; i < 50; i++) {
+          for (let i = 0; i < maxIterations; i++) {
             await new Promise(r => setTimeout(r, 200));
             const stored = await browser.storage.local.get(resultKey);
             if (stored[resultKey]) {

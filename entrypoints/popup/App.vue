@@ -3,15 +3,17 @@ import { ref, onMounted } from 'vue';
 
 const showSettings = ref(false);
 const token = ref('');
+const timeout = ref(15);
 const saved = ref(false);
 
 onMounted(async () => {
-  const stored = await browser.storage.local.get('githubToken') as { githubToken?: string };
+  const stored = await browser.storage.local.get(['githubToken', 'analysisTimeout']) as { githubToken?: string; analysisTimeout?: number };
   if (stored.githubToken) token.value = stored.githubToken;
+  if (stored.analysisTimeout) timeout.value = stored.analysisTimeout;
 });
 
-async function saveToken() {
-  await browser.storage.local.set({ githubToken: token.value });
+async function saveSettings() {
+  await browser.storage.local.set({ githubToken: token.value, analysisTimeout: timeout.value });
   saved.value = true;
   setTimeout(() => saved.value = false, 2000);
 }
@@ -54,8 +56,19 @@ async function saveToken() {
         />
         <p class="setting-hint">Required for private repos or higher rate limits</p>
       </div>
-      <button class="save-btn" :class="{ saved }" @click="saveToken">
-        {{ saved ? '✓ Saved' : 'Save Token' }}
+      <div class="setting-item">
+        <label class="setting-label">Timeout (seconds)</label>
+        <input
+          v-model.number="timeout"
+          type="number"
+          min="5"
+          max="120"
+          class="setting-input"
+        />
+        <p class="setting-hint">Max time to wait for analysis (default: 15s)</p>
+      </div>
+      <button class="save-btn" :class="{ saved }" @click="saveSettings">
+        {{ saved ? '✓ Saved' : 'Save Settings' }}
       </button>
     </div>
 
