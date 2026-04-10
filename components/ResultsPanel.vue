@@ -16,8 +16,7 @@ defineProps<{
 
 <template>
   <div
-    class="absolute top-full left-0 z-[9999] w-[340px] bg-lp-bg border border-lp-border rounded-xl shadow-[0_16px_48px_rgba(0,0,0,0.2),0_0_0_1px_rgba(0,0,0,0.05)] p-5 mt-3 text-lp-fg animate-[lp-slide-up_0.3s_ease]"
-    style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif"
+    class="absolute top-full left-0 z-[9999] w-[340px] font-lp-sans bg-lp-bg border border-lp-border rounded-xl shadow-[0_16px_48px_rgba(0,0,0,0.2),0_0_0_1px_rgba(0,0,0,0.05)] p-5 mt-3 text-lp-fg animate-[lp-slide-up_0.3s_ease]"
   >
     <!-- Loading -->
     <div v-if="status === 'loading'" class="text-center py-8 px-5">

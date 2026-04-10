@@ -1,7 +1,8 @@
-import { ref, onUnmounted } from 'vue';
-import type { Stats, ContentMessage } from '@/utils/types';
-import { sendToBackground, onMessage } from '@/utils/messaging';
+import { ref } from 'vue';
+import type { Stats, AnalyzeResponse } from '@/utils/types';
+import { sendAnalyzeRequest } from '@/utils/messaging';
 import { analysisTimeout } from '@/utils/storage';
+import { detectDefaultBranch } from '@/utils/repo';
 
 export type AnalysisStatus = 'idle' | 'loading' | 'success' | 'error';
 
@@ -12,60 +13,57 @@ export function useAnalysis() {
   const error = ref<string | null>(null);
   const panelOpen = ref(false);
 
-  let timeoutId: ReturnType<typeof setTimeout> | null = null;
-
-  function handleResult(message: ContentMessage) {
-    if (timeoutId) {
-      clearTimeout(timeoutId);
-      timeoutId = null;
-    }
-
-    if (message.success) {
-      repoInfo.value = { owner: message.data.owner, repo: message.data.repo };
-      stats.value = message.data.stats;
-      status.value = 'success';
-    } else {
-      error.value = message.error;
-      status.value = 'error';
-    }
-  }
-
-  const cleanup = onMessage('analysis-result', handleResult);
+  let requestId = 0;
 
   async function startAnalysis(owner: string, repo: string) {
+    const currentId = ++requestId;
+
     repoInfo.value = { owner, repo };
     stats.value = null;
     error.value = null;
     status.value = 'loading';
     panelOpen.value = true;
 
-    const timeoutSeconds = await analysisTimeout.getValue();
-    timeoutId = setTimeout(() => {
-      if (status.value === 'loading') {
-        error.value = 'Analysis timed out';
+    const timeoutMs = (await analysisTimeout.getValue()) * 1000;
+    const defaultBranch = detectDefaultBranch();
+
+    let timeoutTimer: ReturnType<typeof setTimeout> | undefined;
+
+    try {
+      const result: AnalyzeResponse = await Promise.race([
+        sendAnalyzeRequest({ owner, repo, defaultBranch }),
+        new Promise<never>((_, reject) => {
+          timeoutTimer = setTimeout(() => reject(new Error('Analysis timed out')), timeoutMs);
+        }),
+      ]);
+
+      clearTimeout(timeoutTimer);
+
+      // Ignore stale results from a previous request
+      if (currentId !== requestId) return;
+
+      if (result.success) {
+        repoInfo.value = { owner: result.data.owner, repo: result.data.repo };
+        stats.value = result.data.stats;
+        status.value = 'success';
+      } else {
+        error.value = result.error;
         status.value = 'error';
       }
-    }, timeoutSeconds * 1000);
-
-    sendToBackground({ type: 'analyze-repo', payload: { owner, repo } });
+    } catch (err: unknown) {
+      clearTimeout(timeoutTimer);
+      if (currentId !== requestId) return;
+      error.value = err instanceof Error ? err.message : 'Unknown error';
+      status.value = 'error';
+    }
   }
 
   function closePanel() {
     panelOpen.value = false;
-    if (timeoutId) {
-      clearTimeout(timeoutId);
-      timeoutId = null;
-    }
-    // Reset state after close
     status.value = 'idle';
     stats.value = null;
     error.value = null;
   }
-
-  onUnmounted(() => {
-    cleanup();
-    if (timeoutId) clearTimeout(timeoutId);
-  });
 
   return {
     status,

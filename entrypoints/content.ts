@@ -10,7 +10,6 @@ export default defineContentScript({
   async main(ctx) {
     let ui: Awaited<ReturnType<typeof createShadowRootUi<App>>> | null = null;
     let mounting = false;
-    let lastUrl = location.href;
 
     async function tryMount() {
       if (mounting || ui) return;
@@ -50,23 +49,22 @@ export default defineContentScript({
       }
     }
 
-    function checkNavigation() {
-      if (location.href !== lastUrl) {
-        lastUrl = location.href;
-        cleanup();
+    // WXT built-in SPA navigation detection (patches history.pushState/replaceState)
+    ctx.addEventListener(window, 'wxt:locationchange', () => {
+      cleanup();
+      // GitHub renders progressively after navigation — the Code button
+      // may not exist yet. Retry a few times with increasing delays.
+      let attempts = 0;
+      const maxAttempts = 5;
+      function retryMount() {
+        if (ui || attempts >= maxAttempts) return;
+        attempts++;
+        tryMount().then(() => {
+          if (!ui) setTimeout(retryMount, attempts * 200);
+        });
       }
-    }
-
-    // Debounced MutationObserver for GitHub SPA navigation
-    let timer: ReturnType<typeof setTimeout> | null = null;
-    new MutationObserver(() => {
-      if (timer) return;
-      timer = setTimeout(() => {
-        timer = null;
-        checkNavigation();
-        if (!ui) tryMount();
-      }, 200);
-    }).observe(document.body, { childList: true, subtree: true });
+      retryMount();
+    });
 
     // Initial mount
     if (document.readyState === 'loading') {

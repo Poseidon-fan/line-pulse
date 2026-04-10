@@ -82,23 +82,7 @@ bun run build:firefox
 | Extension Framework | [WXT](https://wxt.dev/) |
 | UI | Vue 3 + TypeScript |
 | Analysis Engine | Rust (WASM) |
-| ZIP Processing | pako |
-
-## Project Structure
-
-```
-line-pulse/
-├── entrypoints/          # Extension entry points
-│   ├── background.ts     # Background service worker
-│   ├── content.ts        # GitHub page injection
-│   └── popup/            # Browser popup UI
-├── wasm/                 # Rust WASM analysis engine
-│   └── src/lib.rs        # Language detection & line counting
-├── public/               # Static assets
-│   ├── icon/             # Extension icons
-│   └── wasm/             # Compiled WASM module
-└── wxt.config.ts         # WXT configuration
-```
+| ZIP Processing | [fflate](https://github.com/101arrowz/fflate) |
 
 ## License
 

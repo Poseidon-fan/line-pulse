@@ -31,7 +31,7 @@ async function saveSettings() {
 </script>
 
 <template>
-  <div class="w-80 p-5 font-[-apple-system,BlinkMacSystemFont,'Segoe_UI',Helvetica,Arial,sans-serif] bg-lp-bg text-lp-fg">
+  <div class="w-80 p-5 font-lp-sans bg-lp-bg text-lp-fg">
     <!-- Header -->
     <div class="flex justify-between items-center mb-5">
       <div class="flex items-center gap-2.5">
@@ -71,7 +71,7 @@ async function saveSettings() {
         type="number"
         :min="5"
         :max="120"
-        hint="Max time to wait for analysis (default: 15s)"
+        hint="Max time to wait for analysis (default: 30s)"
       />
       <button
         class="w-full py-2.5 px-4 text-sm font-medium text-white bg-gradient-to-br from-lp-accent to-lp-accent-hover border-none rounded-lg cursor-pointer transition-all duration-200 hover:-translate-y-px hover:shadow-[0_4px_12px_rgba(35,134,54,0.3)]"

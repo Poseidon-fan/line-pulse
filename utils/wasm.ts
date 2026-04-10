@@ -12,16 +12,22 @@ interface WasmAnalysisResult {
 }
 
 let wasmModule: WasmExports | null = null;
+let wasmInitError: Error | null = null;
 
 async function initWasm(): Promise<WasmExports> {
   if (wasmModule) return wasmModule;
+  if (wasmInitError) throw wasmInitError;
 
-  // Vite resolves this absolute path from the `public/` directory at runtime
-  const wasm: WasmExports = await import(/* @vite-ignore */ // @ts-expect-error -- Vite public-dir path, not resolvable by TS
-    '/wasm/pkg/line_pulse_wasm.js');
-  await wasm.default('/wasm/pkg/line_pulse_wasm_bg.wasm');
-  wasmModule = wasm;
-  return wasmModule;
+  try {
+    const wasm: WasmExports = await import(/* @vite-ignore */ // @ts-expect-error -- Vite public-dir path, not resolvable by TS
+      '/wasm/pkg/line_pulse_wasm.js');
+    await wasm.default('/wasm/pkg/line_pulse_wasm_bg.wasm');
+    wasmModule = wasm;
+    return wasmModule;
+  } catch (err) {
+    wasmInitError = err instanceof Error ? err : new Error('WASM initialization failed');
+    throw wasmInitError;
+  }
 }
 
 export async function analyzeWithWasm(files: Record<string, string>): Promise<Stats> {

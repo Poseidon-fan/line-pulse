@@ -20,9 +20,29 @@ export function getRepoInfo(): AnalyzeRequest | null {
   return { owner: match[1], repo: match[2] };
 }
 
+export function detectDefaultBranch(): string | undefined {
+  // GitHub's branch selector button shows the current (default) branch name
+  const branchEl =
+    document.querySelector<HTMLElement>('#branch-select-menu summary .css-truncate-target') ??
+    document.querySelector<HTMLElement>('[data-hotkey="w"] .css-truncate-target') ??
+    document.querySelector<HTMLElement>('.react-branch-picker-button .css-truncate-target');
+  const text = branchEl?.textContent?.trim();
+  // Sanity check: branch names shouldn't contain spaces or be too long
+  if (!text || text.includes(' ') || text.length > 100) return undefined;
+  return text;
+}
+
 export function findCodeButton(): HTMLButtonElement | null {
-  return Array.from(document.querySelectorAll('button')).find((el) => {
-    const text = el.textContent?.trim();
-    return text === 'Code' || el.getAttribute('aria-label') === 'Code';
-  }) ?? null;
+  const scope = document.querySelector('main') ?? document;
+
+  // Try precise selectors first (fast, no JS iteration)
+  const precise = scope.querySelector<HTMLButtonElement>(
+    'get-repo button, button[aria-label="Code"]',
+  );
+  if (precise) return precise;
+
+  // Fallback: text scan within <main> only
+  return Array.from(scope.querySelectorAll<HTMLButtonElement>('button')).find(
+    (el) => el.textContent?.trim() === 'Code',
+  ) ?? null;
 }

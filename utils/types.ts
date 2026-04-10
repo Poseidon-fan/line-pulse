@@ -13,13 +13,14 @@ export interface Stats {
 export interface AnalyzeRequest {
   owner: string;
   repo: string;
+  defaultBranch?: string;
 }
 
-// Content script -> Background
-export type BackgroundMessage =
-  | { type: 'analyze-repo'; payload: AnalyzeRequest };
+export type AnalyzeResponse =
+  | { success: true; data: { owner: string; repo: string; stats: Stats } }
+  | { success: false; error: string };
 
-// Background -> Content script (via browser.tabs.sendMessage)
-export type ContentMessage =
-  | { type: 'analysis-result'; success: true; data: { owner: string; repo: string; stats: Stats } }
-  | { type: 'analysis-result'; success: false; error: string };
+export interface CacheEntry {
+  response: AnalyzeResponse & { success: true };
+  timestamp: number;
+}
