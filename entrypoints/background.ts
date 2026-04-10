@@ -81,6 +81,9 @@ export default defineBackground(() => {
       try {
         // Step 1: Download
         let zipData: string | null = null;
+        let lastStatus: number | null = null;
+        let hasAuthError = false;
+
         for (const br of branches) {
           try {
             const url = `https://codeload.github.com/${owner}/${repo}/zip/refs/heads/${br}`;
@@ -88,6 +91,8 @@ export default defineBackground(() => {
             if (token) headers['Authorization'] = `token ${token}`;
 
             const response = await fetch(url, { headers, redirect: 'follow' });
+            lastStatus = response.status;
+
             if (response.ok) {
               const buffer = await response.arrayBuffer();
               const bytes = new Uint8Array(buffer);
@@ -95,12 +100,18 @@ export default defineBackground(() => {
               for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
               zipData = btoa(binary);
               break;
+            } else if (response.status === 404 || response.status === 403) {
+              hasAuthError = true;
             }
           } catch { /* continue */ }
         }
 
         if (!zipData) {
-          await browser.storage.local.set({ [`result_${requestId}`]: { success: false, error: 'Could not download repository' } });
+          let errorMessage = 'Could not download repository';
+          if (hasAuthError || lastStatus === 404 || lastStatus === 403) {
+            errorMessage = 'Access denied. Please set your GitHub token in the extension popup for private repositories.';
+          }
+          await browser.storage.local.set({ [`result_${requestId}`]: { success: false, error: errorMessage } });
           return true;
         }
 
@@ -134,6 +145,9 @@ export default defineBackground(() => {
       const token = stored.githubToken || '';
 
       const download = async (): Promise<{ success: boolean; data?: string; error?: string }> => {
+        let lastStatus: number | null = null;
+        let hasAuthError = false;
+
         for (const br of branches) {
           try {
             const url = `https://codeload.github.com/${owner}/${repo}/zip/refs/heads/${br}`;
@@ -141,6 +155,7 @@ export default defineBackground(() => {
             if (token) headers['Authorization'] = `token ${token}`;
 
             const response = await fetch(url, { headers, redirect: 'follow' });
+            lastStatus = response.status;
 
             if (response.ok) {
               const buffer = await response.arrayBuffer();
@@ -148,8 +163,14 @@ export default defineBackground(() => {
               let binary = '';
               for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
               return { success: true, data: btoa(binary) };
+            } else if (response.status === 404 || response.status === 403) {
+              hasAuthError = true;
             }
           } catch { /* continue */ }
+        }
+
+        if (hasAuthError || lastStatus === 404 || lastStatus === 403) {
+          return { success: false, error: 'Access denied. Please set your GitHub token in the extension popup for private repositories.' };
         }
         return { success: false, error: 'Could not download repository' };
       };
