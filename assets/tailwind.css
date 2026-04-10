@@ -1,0 +1,37 @@
+@import "tailwindcss";
+
+@theme {
+  /* Brand */
+  --color-lp-accent: #238636;
+  --color-lp-accent-hover: #2ea043;
+
+  /* Light mode (defaults) */
+  --color-lp-bg: #ffffff;
+  --color-lp-fg: #1f2328;
+  --color-lp-fg-secondary: #656d76;
+  --color-lp-border: #d1d9e0;
+  --color-lp-card-bg: #f6f8fa;
+  --color-lp-bar-bg: #e8eaed;
+  --color-lp-input-bg: #ffffff;
+  --color-lp-error: #f85149;
+}
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Dark mode overrides.
+ * Applied via `prefers-color-scheme` for both popup (page-level)
+ * and content-script Shadow DOM (`:host` level).
+ */
+@media (prefers-color-scheme: dark) {
+  :root,
+  :host {
+    --color-lp-bg: #0d1117;
+    --color-lp-fg: #e6edf3;
+    --color-lp-fg-secondary: #8b949e;
+    --color-lp-border: #30363d;
+    --color-lp-card-bg: #161b22;
+    --color-lp-bar-bg: #30363d;
+    --color-lp-input-bg: #161b22;
+  }
+}

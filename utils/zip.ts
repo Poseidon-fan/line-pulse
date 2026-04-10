@@ -19,7 +19,7 @@ export function unzip(data: Uint8Array): Record<string, string> {
       if (!text.includes('\0')) {
         files[path] = text;
       }
-    } catch { /* skip binary files */ }
+    } catch (_: unknown) { /* skip binary files */ }
   }
 
   return files;

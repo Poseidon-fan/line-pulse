@@ -1,5 +1,5 @@
 export type DownloadResult =
-  | {  Uint8Array }
+  | { data: Uint8Array }
   | { error: string };
 
 export async function downloadRepoZip(
@@ -25,7 +25,7 @@ export async function downloadRepoZip(
       if (response.status === 404 || response.status === 403) {
         hasAuthError = true;
       }
-    } catch { /* try next branch */ }
+    } catch (_: unknown) { /* try next branch */ }
   }
 
   if (hasAuthError) {

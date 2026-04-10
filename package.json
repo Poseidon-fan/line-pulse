@@ -19,6 +19,7 @@
     "vue": "^3.5.25"
   },
   "devDependencies": {
+    "@tailwindcss/vite": "^4.2.2",
     "@wxt-dev/module-vue": "^1.0.3",
     "typescript": "^5.9.3",
     "wxt": "^0.20.6"
