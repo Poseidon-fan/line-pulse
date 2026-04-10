@@ -129,6 +129,13 @@ export default defineContentScript({
       `;
     }
 
+    function formatNumber(num: number): string {
+      if (num >= 1000) {
+        return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+      }
+      return num.toLocaleString();
+    }
+
     function showResults(container: HTMLElement, owner: string, repo: string, stats: Stats) {
       const theme = JSON.parse(container.dataset.theme || '{}');
       const darkMode = isDarkMode();
@@ -173,15 +180,15 @@ export default defineContentScript({
 
         <div class="lp-stats">
           <div class="lp-stat">
-            <span class="lp-stat-value">${stats.total.toLocaleString()}</span>
+            <span class="lp-stat-value">${formatNumber(stats.total)}</span>
             <span class="lp-stat-label">Lines</span>
           </div>
           <div class="lp-stat">
-            <span class="lp-stat-value">${stats.files.toLocaleString()}</span>
+            <span class="lp-stat-value">${formatNumber(stats.files)}</span>
             <span class="lp-stat-label">Files</span>
           </div>
           <div class="lp-stat">
-            <span class="lp-stat-value">${stats.languages.length}</span>
+            <span class="lp-stat-value">${formatNumber(stats.languages.length)}</span>
             <span class="lp-stat-label">Languages</span>
           </div>
         </div>
