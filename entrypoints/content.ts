@@ -26,7 +26,7 @@ export default defineContentScript({
           anchor: codeButton,
           append: 'before',
           onMount(container, _shadow, host) {
-            host.style.display = 'inline';
+            tuneToolbarLayout(codeButton, host);
             const app = createApp(ContentApp, { shadowHost: host });
             app.mount(container);
             return app;
@@ -74,3 +74,23 @@ export default defineContentScript({
     }
   },
 });
+
+function tuneToolbarLayout(codeButton: HTMLButtonElement, host: HTMLElement) {
+  host.style.display = 'inline-flex';
+  host.style.flex = '0 0 auto';
+  host.style.minWidth = 'max-content';
+  host.style.maxWidth = 'max-content';
+  host.style.whiteSpace = 'nowrap';
+
+  const toolbar = codeButton.parentElement;
+  if (!toolbar) return;
+
+  toolbar.style.flexWrap = 'nowrap';
+  toolbar.style.minWidth = '0';
+
+  const searchArea = host.previousElementSibling;
+  if (searchArea instanceof HTMLElement) {
+    searchArea.style.flex = '1 1 auto';
+    searchArea.style.minWidth = '0';
+  }
+}

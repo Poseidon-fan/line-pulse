@@ -12,7 +12,7 @@ defineEmits<{
 
 <template>
   <button
-    class="inline-flex items-center py-1.5 px-3.5 text-[13px] font-semibold text-white bg-gradient-to-br from-lp-accent to-lp-accent-hover border-none rounded-lg cursor-pointer mr-2 transition-all duration-200 shadow-sm hover:not-disabled:-translate-y-px hover:not-disabled:shadow-[0_4px_12px_rgba(35,134,54,0.4)] disabled:cursor-not-allowed disabled:opacity-70"
+    class="inline-flex shrink-0 items-center whitespace-nowrap py-1.5 px-3.5 text-[13px] font-semibold text-white bg-gradient-to-br from-lp-accent to-lp-accent-hover border-none rounded-lg cursor-pointer mr-2 transition-all duration-200 shadow-sm hover:not-disabled:-translate-y-px hover:not-disabled:shadow-[0_4px_12px_rgba(35,134,54,0.4)] disabled:cursor-not-allowed disabled:opacity-70"
     :disabled="loading"
     @click.prevent.stop="$emit('analyze')"
   >
