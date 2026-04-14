@@ -1,5 +1,5 @@
 import { ref } from 'vue';
-import type { Stats, AnalyzeResponse } from '@/utils/types';
+import type { AnalyzeRequest, RepoRef, Stats, AnalyzeResponse } from '@/utils/types';
 import { sendAnalyzeRequest } from '@/utils/messaging';
 import { analysisTimeout } from '@/utils/storage';
 
@@ -8,16 +8,17 @@ export type AnalysisStatus = 'idle' | 'loading' | 'success' | 'error';
 export function useAnalysis() {
   const status = ref<AnalysisStatus>('idle');
   const stats = ref<Stats | null>(null);
-  const repoInfo = ref<{ owner: string; repo: string } | null>(null);
+  const repoInfo = ref<{ owner: string; repo: string; ref?: RepoRef } | null>(null);
   const error = ref<string | null>(null);
   const panelOpen = ref(false);
 
   let requestId = 0;
 
-  async function startAnalysis(owner: string, repo: string) {
+  async function startAnalysis(request: AnalyzeRequest) {
     const currentId = ++requestId;
+    const { owner, repo, ref: requestedRef } = request;
 
-    repoInfo.value = { owner, repo };
+    repoInfo.value = { owner, repo, ref: requestedRef };
     stats.value = null;
     error.value = null;
     status.value = 'loading';
@@ -29,7 +30,7 @@ export function useAnalysis() {
 
     try {
       const result: AnalyzeResponse = await Promise.race([
-        sendAnalyzeRequest({ owner, repo }),
+        sendAnalyzeRequest(request),
         new Promise<never>((_, reject) => {
           timeoutTimer = setTimeout(() => reject(new Error('Analysis timed out')), timeoutMs);
         }),
@@ -41,7 +42,11 @@ export function useAnalysis() {
       if (currentId !== requestId) return;
 
       if (result.success) {
-        repoInfo.value = { owner: result.data.owner, repo: result.data.repo };
+        repoInfo.value = {
+          owner: result.data.owner,
+          repo: result.data.repo,
+          ref: result.data.ref,
+        };
         stats.value = result.data.stats;
         status.value = 'success';
       } else {

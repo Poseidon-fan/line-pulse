@@ -1,3 +1,5 @@
+import type { RepoRef } from './types';
+
 export type DownloadResult =
   | { data: Uint8Array }
   | { error: string };
@@ -65,40 +67,38 @@ export async function getDefaultBranch(
 export async function downloadRepoZip(
   owner: string,
   repo: string,
-  branches: string[],
+  ref: RepoRef,
   token: string,
   signal?: AbortSignal,
 ): Promise<DownloadResult> {
-  let accessDenied = false;
+  const archivePath = ref.type === 'branch'
+    ? `refs/heads/${ref.name}`
+    : ref.type === 'tag'
+      ? `refs/tags/${ref.name}`
+      : ref.name;
 
-  for (const branch of branches) {
-    try {
-      const url = `https://codeload.github.com/${owner}/${repo}/zip/refs/heads/${branch}`;
-      const response = await fetch(url, {
-        cache: 'no-store',
-        headers: getArchiveHeaders(token),
-        redirect: 'follow',
-        signal,
-      });
+  try {
+    const url = `https://codeload.github.com/${owner}/${repo}/zip/${archivePath}`;
+    const response = await fetch(url, {
+      cache: 'no-store',
+      headers: getArchiveHeaders(token),
+      redirect: 'follow',
+      signal,
+    });
 
-      if (response.ok) {
-        return { data: new Uint8Array(await response.arrayBuffer()) };
-      }
+    if (response.ok) {
+      return { data: new Uint8Array(await response.arrayBuffer()) };
+    }
 
-      if (response.status === 401 || response.status === 403) {
-        accessDenied = true;
-      }
-    } catch (err: unknown) {
-      if (err instanceof DOMException && err.name === 'AbortError') {
-        return { error: 'Request cancelled' };
-      }
-      // Try next branch
+    if (response.status === 401 || response.status === 403) {
+      return { error: 'Access denied. Please set your GitHub token in the extension popup for private repositories.' };
+    }
+  } catch (err: unknown) {
+    if (err instanceof DOMException && err.name === 'AbortError') {
+      return { error: 'Request cancelled' };
     }
   }
 
-  if (accessDenied) {
-    return { error: 'Access denied. Please set your GitHub token in the extension popup for private repositories.' };
-  }
   if (!token) {
     return { error: 'Repository not found. If this is a private repo, set your GitHub token in the extension popup.' };
   }

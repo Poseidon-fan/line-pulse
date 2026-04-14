@@ -1,17 +1,24 @@
 <script setup lang="ts">
 import { CircleAlert } from 'lucide-vue-next';
-import type { Stats } from '@/utils/types';
+import type { RepoRefType, Stats } from '@/utils/types';
 import type { AnalysisStatus } from '@/composables/useAnalysis';
 import StatsGrid from './StatsGrid.vue';
 import LanguageBar from './LanguageBar.vue';
 
-defineProps<{
+const props = defineProps<{
   status: AnalysisStatus;
   stats: Stats | null;
   error: string | null;
   owner: string;
   repo: string;
+  refName: string;
+  refType: RepoRefType;
 }>();
+
+function getRefLabel(refName: string, refType: RepoRefType): string {
+  if (!refName) return '';
+  return refType === 'commit' ? refName.slice(0, 7) : refName;
+}
 </script>
 
 <template>
@@ -37,10 +44,22 @@ defineProps<{
 
     <!-- Success -->
     <template v-else-if="status === 'success' && stats">
-      <div class="flex items-center justify-between mb-4">
-        <span class="text-[13px] text-lp-fg-secondary">
-          <strong class="text-lp-fg font-semibold">{{ owner }}</strong>/{{ repo }}
-        </span>
+      <div class="mb-4">
+        <div class="flex items-center gap-2 min-w-0">
+          <span
+            class="min-w-0 truncate text-[13px] text-lp-fg-secondary"
+            :title="`${owner}/${repo}`"
+          >
+            <strong class="text-lp-fg font-semibold">{{ owner }}</strong>/{{ repo }}
+          </span>
+          <span
+            v-if="refName"
+            class="shrink-0 px-2 py-0.5 rounded-md bg-lp-card-bg border border-lp-border text-[11px] uppercase tracking-wide"
+            :title="`${refType}: ${refName}`"
+          >
+            {{ refType }}: {{ getRefLabel(props.refName, props.refType) }}
+          </span>
+        </div>
       </div>
 
       <StatsGrid :stats="stats" />

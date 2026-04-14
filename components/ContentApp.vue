@@ -19,7 +19,7 @@ const { register: registerClickOutside, unregister: unregisterClickOutside } =
 function onAnalyze() {
   const repo = getRepoInfo();
   if (!repo) return;
-  startAnalysis(repo.owner, repo.repo);
+  startAnalysis(repo);
   registerClickOutside();
 }
 
@@ -41,6 +41,8 @@ onUnmounted(() => {
       :error="error"
       :owner="repoInfo?.owner ?? ''"
       :repo="repoInfo?.repo ?? ''"
+      :ref-name="repoInfo?.ref?.name ?? ''"
+      :ref-type="repoInfo?.ref?.type ?? 'branch'"
     />
   </div>
 </template>
