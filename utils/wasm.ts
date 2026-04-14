@@ -1,10 +1,7 @@
 import type { Stats, LanguageStats } from '@/utils/types';
 import initWasmModule from '../wasm/pkg/line_pulse_wasm_bg.wasm?init';
-import {
-  analyze_code,
-  __wbg_set_wasm,
-  __wbindgen_init_externref_table,
-} from '../wasm/pkg/line_pulse_wasm_bg.js';
+// @ts-ignore wasm-bindgen does not generate a declaration file for this helper module.
+import * as wasmBindings from '../wasm/pkg/line_pulse_wasm_bg.js';
 
 interface WasmAnalysisResult {
   total: number;
@@ -12,11 +9,21 @@ interface WasmAnalysisResult {
   languages: LanguageStats[];
 }
 
-interface WasmInstance {
-  exports: WebAssembly.Exports & {
-    __wbindgen_start: () => void;
-  };
+interface WasmExports extends WebAssembly.Exports {
+  __wbindgen_start: () => void;
 }
+
+interface WasmBindings {
+  analyze_code: (filesJson: string) => string;
+  __wbg_set_wasm: (wasm: WasmExports) => void;
+  __wbindgen_init_externref_table: () => void;
+}
+
+const {
+  analyze_code,
+  __wbg_set_wasm,
+  __wbindgen_init_externref_table,
+} = wasmBindings as WasmBindings;
 
 let wasmReady: Promise<void> | null = null;
 
@@ -28,8 +35,8 @@ async function ensureWasmReady(): Promise<void> {
       __wbindgen_init_externref_table,
     },
   })
-    .then((instance: WasmInstance) => {
-      const wasm = instance.exports;
+    .then((instance) => {
+      const wasm = instance.exports as WasmExports;
       __wbg_set_wasm(wasm);
       wasm.__wbindgen_start();
     })
