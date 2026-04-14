@@ -2,7 +2,6 @@ import { ref } from 'vue';
 import type { Stats, AnalyzeResponse } from '@/utils/types';
 import { sendAnalyzeRequest } from '@/utils/messaging';
 import { analysisTimeout } from '@/utils/storage';
-import { detectDefaultBranch } from '@/utils/repo';
 
 export type AnalysisStatus = 'idle' | 'loading' | 'success' | 'error';
 
@@ -25,13 +24,12 @@ export function useAnalysis() {
     panelOpen.value = true;
 
     const timeoutMs = (await analysisTimeout.getValue()) * 1000;
-    const defaultBranch = detectDefaultBranch();
 
     let timeoutTimer: ReturnType<typeof setTimeout> | undefined;
 
     try {
       const result: AnalyzeResponse = await Promise.race([
-        sendAnalyzeRequest({ owner, repo, defaultBranch }),
+        sendAnalyzeRequest({ owner, repo }),
         new Promise<never>((_, reject) => {
           timeoutTimer = setTimeout(() => reject(new Error('Analysis timed out')), timeoutMs);
         }),

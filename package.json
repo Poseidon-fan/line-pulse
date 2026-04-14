@@ -5,12 +5,13 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "wxt",
-    "dev:firefox": "wxt -b firefox",
-    "build": "wxt build",
-    "build:firefox": "wxt build -b firefox",
-    "zip": "wxt zip",
-    "zip:firefox": "wxt zip -b firefox",
+    "wasm:build": "wasm-pack build ./wasm --target bundler --out-dir pkg",
+    "dev": "bun run wasm:build && wxt",
+    "dev:firefox": "bun run wasm:build && wxt -b firefox",
+    "build": "bun run wasm:build && wxt build",
+    "build:firefox": "bun run wasm:build && wxt build -b firefox",
+    "zip": "bun run wasm:build && wxt zip",
+    "zip:firefox": "bun run wasm:build && wxt zip -b firefox",
     "postinstall": "wxt prepare"
   },
   "dependencies": {

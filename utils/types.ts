@@ -13,7 +13,6 @@ export interface Stats {
 export interface AnalyzeRequest {
   owner: string;
   repo: string;
-  defaultBranch?: string;
 }
 
 export type AnalyzeResponse =

@@ -1,9 +1,10 @@
 import type { Stats, LanguageStats } from '@/utils/types';
-
-interface WasmExports {
-  default(wasmUrl: string): Promise<void>;
-  analyze_code(filesJson: string): string;
-}
+import initWasmModule from '../wasm/pkg/line_pulse_wasm_bg.wasm?init';
+import {
+  analyze_code,
+  __wbg_set_wasm,
+  __wbindgen_init_externref_table,
+} from '../wasm/pkg/line_pulse_wasm_bg.js';
 
 interface WasmAnalysisResult {
   total: number;
@@ -11,28 +12,39 @@ interface WasmAnalysisResult {
   languages: LanguageStats[];
 }
 
-let wasmModule: WasmExports | null = null;
-let wasmInitError: Error | null = null;
+interface WasmInstance {
+  exports: WebAssembly.Exports & {
+    __wbindgen_start: () => void;
+  };
+}
 
-async function initWasm(): Promise<WasmExports> {
-  if (wasmModule) return wasmModule;
-  if (wasmInitError) throw wasmInitError;
+let wasmReady: Promise<void> | null = null;
 
-  try {
-    const wasm: WasmExports = await import(/* @vite-ignore */ // @ts-expect-error -- Vite public-dir path, not resolvable by TS
-      '/wasm/pkg/line_pulse_wasm.js');
-    await wasm.default('/wasm/pkg/line_pulse_wasm_bg.wasm');
-    wasmModule = wasm;
-    return wasmModule;
-  } catch (err) {
-    wasmInitError = err instanceof Error ? err : new Error('WASM initialization failed');
-    throw wasmInitError;
-  }
+async function ensureWasmReady(): Promise<void> {
+  if (wasmReady) return wasmReady;
+
+  wasmReady = initWasmModule({
+    './line_pulse_wasm_bg.js': {
+      __wbindgen_init_externref_table,
+    },
+  })
+    .then((instance: WasmInstance) => {
+      const wasm = instance.exports;
+      __wbg_set_wasm(wasm);
+      wasm.__wbindgen_start();
+    })
+    .catch((err: unknown) => {
+      wasmReady = null;
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      throw new Error(`WASM initialization failed: ${message}`);
+    });
+
+  return wasmReady;
 }
 
 export async function analyzeWithWasm(files: Record<string, string>): Promise<Stats> {
-  const mod = await initWasm();
-  const result: WasmAnalysisResult = JSON.parse(mod.analyze_code(JSON.stringify(files)));
+  await ensureWasmReady();
+  const result: WasmAnalysisResult = JSON.parse(analyze_code(JSON.stringify(files)));
   return {
     total: result.total,
     files: result.files,

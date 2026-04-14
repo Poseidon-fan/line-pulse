@@ -63,9 +63,6 @@ Sometimes you just want to quickly know the size of a GitHub repository — how 
 # Install WASM toolchain (first time only)
 cargo install wasm-pack
 
-# Build WASM module
-wasm-pack build ./wasm --target web
-
 # Install dependencies
 bun install
 
@@ -82,6 +79,8 @@ bun run build
 # Build for Firefox
 bun run build:firefox
 ```
+
+`bun run dev` / `bun run build` will automatically generate the WASM bundle into `wasm/pkg`.
 
 ## Tech Stack
 

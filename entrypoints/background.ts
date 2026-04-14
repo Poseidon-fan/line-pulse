@@ -1,6 +1,6 @@
 import type { AnalyzeRequest, AnalyzeResponse } from '@/utils/types';
 import { githubToken } from '@/utils/storage';
-import { downloadRepoZip } from '@/utils/github';
+import { downloadRepoZip, getDefaultBranch } from '@/utils/github';
 import { unzip } from '@/utils/zip';
 import { analyzeWithWasm } from '@/utils/wasm';
 import { getCache, setCache } from '@/utils/cache';
@@ -35,7 +35,7 @@ export default defineBackground(() => {
 });
 
 async function handleAnalyze(payload: AnalyzeRequest, signal: AbortSignal): Promise<AnalyzeResponse> {
-  const { owner, repo, defaultBranch } = payload;
+  const { owner, repo } = payload;
   const cacheKey = `${owner}/${repo}`;
 
   const debug = import.meta.env.DEV;
@@ -49,15 +49,20 @@ async function handleAnalyze(payload: AnalyzeRequest, signal: AbortSignal): Prom
       return cached;
     }
 
-    // Determine branches to try: detected branch first, then common fallbacks
-    const fallbacks = ['main', 'master'];
-    const branches = defaultBranch
-      ? [defaultBranch, ...fallbacks.filter((b) => b !== defaultBranch)]
-      : fallbacks;
     const token = await githubToken.getValue();
+    const branchResult = await getDefaultBranch(owner, repo, token, signal);
+    if ('error' in branchResult) {
+      return { success: false, error: branchResult.error };
+    }
 
     // Download
-    const downloadResult = await downloadRepoZip(owner, repo, branches, token, signal);
+    const downloadResult = await downloadRepoZip(
+      owner,
+      repo,
+      [branchResult.defaultBranch],
+      token,
+      signal,
+    );
     if ('error' in downloadResult) {
       return { success: false, error: downloadResult.error };
     }

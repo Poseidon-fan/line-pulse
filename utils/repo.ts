@@ -20,18 +20,6 @@ export function getRepoInfo(): AnalyzeRequest | null {
   return { owner: match[1], repo: match[2] };
 }
 
-export function detectDefaultBranch(): string | undefined {
-  // GitHub's branch selector button shows the current (default) branch name
-  const branchEl =
-    document.querySelector<HTMLElement>('#branch-select-menu summary .css-truncate-target') ??
-    document.querySelector<HTMLElement>('[data-hotkey="w"] .css-truncate-target') ??
-    document.querySelector<HTMLElement>('.react-branch-picker-button .css-truncate-target');
-  const text = branchEl?.textContent?.trim();
-  // Sanity check: branch names shouldn't contain spaces or be too long
-  if (!text || text.includes(' ') || text.length > 100) return undefined;
-  return text;
-}
-
 export function findCodeButton(): HTMLButtonElement | null {
   const scope = document.querySelector('main') ?? document;
 
