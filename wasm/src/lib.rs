@@ -39,9 +39,6 @@ static COLORS: LazyLock<HashMap<&'static str, &'static str>> = LazyLock::new(|| 
         ("SASS", "#A53B70"),
         ("LESS", "#1d365d"),
         ("Shell", "#89e051"),
-        ("JSON", "#292929"),
-        ("Markdown", "#083fa1"),
-        ("YAML", "#cb171e"),
         ("SQL", "#e38c00"),
         ("Dockerfile", "#384d54"),
         ("C#", "#178600"),
@@ -58,31 +55,21 @@ static COLORS: LazyLock<HashMap<&'static str, &'static str>> = LazyLock::new(|| 
         ("Lua", "#000080"),
         ("Perl", "#0298c3"),
         ("Tcl", "#e4cc98"),
-        ("HAML", "#ECE2CE"),
         ("GraphQL", "#e10098"),
         ("Elm", "#60B5BC"),
         ("PureScript", "#1D222D"),
         ("ReasonML", "#dd4b39"),
-        ("TeX", "#3D6117"),
         ("LaTeX", "#3D6117"),
         ("Assembly", "#6E4C13"),
         ("Makefile", "#427819"),
         ("CMake", "#DA3434"),
         ("Ninja", "#8DCC65"),
         ("Gradle", "#02303a"),
-        ("Maven", "#C71A36"),
-        ("SBT", "#0029B3"),
-        ("Nix", "#7E7EFF"),
         ("Terraform", "#5C4EE5"),
         ("Vagrant", "#1868F2"),
-        ("INI", "#E6E6E6"),
-        ("TOML", "#9C4121"),
-        ("XML", "#0060AC"),
-        ("SVG", "#FFB13B"),
         ("protobuf", "#418B9E"),
         ("Caddyfile", "#5F7D58"),
         ("Nginx", "#009639"),
-        ("Apache", "#D22128"),
         ("Vim script", "#199F4B"),
         ("Emacs Lisp", "#064e8b"),
         ("PowerShell", "#012456"),
@@ -99,13 +86,9 @@ static COLORS: LazyLock<HashMap<&'static str, &'static str>> = LazyLock::new(|| 
         ("Mustache", "#724B0B"),
         ("EJS", "#B4AB72"),
         ("Pug", "#A86454"),
-        ("Racket", "#3C5C8D"),
         ("Scheme", "#1D4C73"),
-        ("Common Lisp", "#3FB68B"),
         ("Julia", "#A270BA"),
-        ("Fortran", "#4D4D4D"),
         ("Pascal", "#B0C682"),
-        ("Delphi", "#EEE4C4"),
         ("Objective-C", "#438EFF"),
         ("Zig", "#EC915C"),
         ("Nim", "#FFC200"),
@@ -114,7 +97,7 @@ static COLORS: LazyLock<HashMap<&'static str, &'static str>> = LazyLock::new(|| 
         ("Solidity", "#AA6746"),
         ("Move", "#4D4D4D"),
         ("PRQL", "#da6a22"),
-        ("Other", "#cccccc"),
+        ("Jenkins", "#D24939"),
     ])
 });
 
@@ -134,7 +117,10 @@ pub fn analyze_code(files_json: &str) -> String {
     let mut file_count = 0;
 
     for (filename, content) in &files {
-        let lang = detect_language(filename);
+        let lang = match detect_language(filename) {
+            Some(l) => l,
+            None => continue,
+        };
         let line_count = content.lines().count();
         total_lines += line_count;
         file_count += 1;
@@ -159,145 +145,138 @@ pub fn analyze_code(files_json: &str) -> String {
     }).unwrap_or_else(|_| "{}".to_string())
 }
 
-fn detect_language(filename: &str) -> &'static str {
+fn detect_language(filename: &str) -> Option<&'static str> {
     // Try filename-based detection first (for files like Dockerfile, Makefile, etc.)
     let basename = filename.rsplit('/').next().unwrap_or(filename);
     if let Some(lang) = detect_by_filename(basename) {
-        return lang;
+        return Some(lang);
     }
 
     // Handle compound extensions (e.g., "foo.d.ts", "bar.blade.php")
     if filename.ends_with(".d.ts") {
-        return "TypeScript";
+        return Some("TypeScript");
     }
     if filename.ends_with(".blade.php") {
-        return "Blade";
+        return Some("Blade");
     }
 
     // Fall back to simple extension
     let ext = filename.rsplit('.').next().unwrap_or("");
     match ext {
         // JavaScript family
-        "js" | "mjs" | "cjs" | "jsx" => "JavaScript",
-        "ts" | "tsx" | "mts" | "cts" => "TypeScript",
-        "vue" => "Vue",
-        "svelte" => "Svelte",
+        "js" | "mjs" | "cjs" | "jsx" => Some("JavaScript"),
+        "ts" | "tsx" | "mts" | "cts" => Some("TypeScript"),
+        "vue" => Some("Vue"),
+        "svelte" => Some("Svelte"),
 
         // Python
-        "py" | "pyw" | "pyx" | "pyi" => "Python",
+        "py" | "pyw" | "pyx" | "pyi" => Some("Python"),
 
         // Rust
-        "rs" => "Rust",
+        "rs" => Some("Rust"),
 
         // Go
-        "go" => "Go",
+        "go" => Some("Go"),
 
         // Java family
-        "java" => "Java",
-        "kt" | "kts" => "Kotlin",
-        "scala" | "sc" => "Scala",
-        "groovy" => "Groovy",
-        "gradle" => "Gradle",
+        "java" => Some("Java"),
+        "kt" | "kts" => Some("Kotlin"),
+        "scala" | "sc" => Some("Scala"),
+        "groovy" => Some("Groovy"),
+        "gradle" => Some("Gradle"),
 
         // C family
-        "c" | "h" => "C",
-        "cpp" | "cc" | "cxx" | "hpp" | "hxx" | "hh" => "C++",
-        "cs" => "C#",
-        "m" | "mm" => "Objective-C",
+        "c" | "h" => Some("C"),
+        "cpp" | "cc" | "cxx" | "hpp" | "hxx" | "hh" => Some("C++"),
+        "cs" => Some("C#"),
+        "m" | "mm" => Some("Objective-C"),
 
         // Web
-        "html" | "htm" | "xhtml" => "HTML",
-        "css" | "pcss" | "postcss" => "CSS",
-        "scss" => "SCSS",
-        "sass" => "SASS",
-        "less" => "LESS",
-        "xml" | "xsl" | "xslt" => "XML",
-        "svg" => "SVG",
+        "html" | "htm" | "xhtml" => Some("HTML"),
+        "css" | "pcss" | "postcss" => Some("CSS"),
+        "scss" => Some("SCSS"),
+        "sass" => Some("SASS"),
+        "less" => Some("LESS"),
 
         // Shell
-        "sh" | "bash" | "zsh" | "fish" | "ksh" => "Shell",
-        "ps1" | "psm1" => "PowerShell",
-        "bat" | "cmd" => "Batch",
-
-        // Data formats
-        "json" => "JSON",
-        "yaml" | "yml" => "YAML",
-        "toml" => "TOML",
-        "ini" | "cfg" | "conf" | "properties" => "INI",
+        "sh" | "bash" | "zsh" | "fish" | "ksh" => Some("Shell"),
+        "ps1" | "psm1" => Some("PowerShell"),
+        "bat" | "cmd" => Some("Batch"),
 
         // Database
-        "sql" | "pgsql" => "SQL",
-        "prql" => "PRQL",
+        "sql" | "pgsql" => Some("SQL"),
+        "prql" => Some("PRQL"),
 
-        // Documentation
-        "md" | "markdown" | "mdown" => "Markdown",
-        "tex" | "latex" | "ltx" => "LaTeX",
+        // Documentation (code-like)
+        "tex" | "latex" | "ltx" => Some("LaTeX"),
 
         // DevOps
-        "tf" | "hcl" => "Terraform",
-        "nginx" => "Nginx",
+        "tf" | "hcl" => Some("Terraform"),
+        "nginx" => Some("Nginx"),
 
         // Build tools
-        "mk" => "Makefile",
-        "cmake" => "CMake",
-        "ninja" => "Ninja",
+        "mk" => Some("Makefile"),
+        "cmake" => Some("CMake"),
+        "ninja" => Some("Ninja"),
 
         // Scripting
-        "rb" | "erb" | "rake" | "gemspec" => "Ruby",
-        "php" => "PHP",
-        "pl" | "pm" | "pod" => "Perl",
-        "lua" => "Lua",
-        "tcl" | "tk" => "Tcl",
-        "r" | "rdata" | "rds" => "R",
-        "jl" => "Julia",
+        "rb" | "erb" | "rake" | "gemspec" => Some("Ruby"),
+        "php" => Some("PHP"),
+        "pl" | "pm" | "pod" => Some("Perl"),
+        "lua" => Some("Lua"),
+        "tcl" | "tk" => Some("Tcl"),
+        "r" | "rdata" | "rds" => Some("R"),
+        "jl" => Some("Julia"),
 
         // Functional
-        "hs" | "lhs" => "Haskell",
-        "ex" | "exs" => "Elixir",
-        "erl" | "hrl" => "Erlang",
-        "clj" | "cljs" | "cljc" | "edn" => "Clojure",
-        "ml" | "mli" => "OCaml",
-        "fs" | "fsx" | "fsi" => "F#",
+        "hs" | "lhs" => Some("Haskell"),
+        "ex" | "exs" => Some("Elixir"),
+        "erl" | "hrl" => Some("Erlang"),
+        "clj" | "cljs" | "cljc" | "edn" => Some("Clojure"),
+        "ml" | "mli" => Some("OCaml"),
+        "fs" | "fsx" | "fsi" => Some("F#"),
 
         // Modern
-        "dart" => "Dart",
-        "elm" => "Elm",
-        "purs" => "PureScript",
-        "re" | "rei" => "ReasonML",
-        "zig" => "Zig",
-        "nim" => "Nim",
-        "cr" => "Crystal",
-        "v" | "vv" => "V",
-        "sol" => "Solidity",
-        "move" => "Move",
-        "swift" => "Swift",
+        "dart" => Some("Dart"),
+        "elm" => Some("Elm"),
+        "purs" => Some("PureScript"),
+        "re" | "rei" => Some("ReasonML"),
+        "zig" => Some("Zig"),
+        "nim" => Some("Nim"),
+        "cr" => Some("Crystal"),
+        "v" | "vv" => Some("V"),
+        "sol" => Some("Solidity"),
+        "move" => Some("Move"),
+        "swift" => Some("Swift"),
 
-        // Other
-        "asm" | "s" => "Assembly",
-        "pas" | "pp" => "Pascal",
-        "lisp" | "scm" | "ss" | "rkt" => "Scheme",
-        "vim" | "vimrc" => "Vim script",
-        "el" | "elc" => "Emacs Lisp",
-        "ahk" => "AutoHotkey",
-        "au3" => "AutoIt",
-        "nsis" => "NSIS",
-        "iss" => "Inno Setup",
-        "liquid" => "Liquid",
-        "smarty" | "tpl" => "Smarty",
-        "jinja" | "jinja2" => "Jinja",
-        "handlebars" | "hbs" => "Handlebars",
-        "mustache" => "Mustache",
-        "ejs" => "EJS",
-        "pug" | "jade" => "Pug",
+        // Other programming
+        "asm" | "s" => Some("Assembly"),
+        "pas" | "pp" => Some("Pascal"),
+        "lisp" | "scm" | "ss" | "rkt" => Some("Scheme"),
+        "vim" | "vimrc" => Some("Vim script"),
+        "el" | "elc" => Some("Emacs Lisp"),
+        "ahk" => Some("AutoHotkey"),
+        "au3" => Some("AutoIt"),
+        "nsis" => Some("NSIS"),
+        "iss" => Some("Inno Setup"),
+        "liquid" => Some("Liquid"),
+        "smarty" | "tpl" => Some("Smarty"),
+        "jinja" | "jinja2" => Some("Jinja"),
+        "handlebars" | "hbs" => Some("Handlebars"),
+        "mustache" => Some("Mustache"),
+        "ejs" => Some("EJS"),
+        "pug" | "jade" => Some("Pug"),
 
-        // Config & misc
-        "graphql" | "gql" => "GraphQL",
-        "proto" | "protobuf" => "protobuf",
-        "caddyfile" => "Caddyfile",
-        "lock" => "Lock",
-        "txt" | "text" => "Text",
+        // Query & schema
+        "graphql" | "gql" => Some("GraphQL"),
+        "proto" | "protobuf" => Some("protobuf"),
+        "caddyfile" => Some("Caddyfile"),
 
-        _ => "Other",
+        // Non-code: data, config, prose, generated → skip
+        // json, yaml, yml, toml, xml, xsl, xslt, svg,
+        // ini, cfg, conf, properties, md, markdown, mdown,
+        // txt, text, lock, and all unrecognized extensions
+        _ => None,
     }
 }
 
@@ -309,11 +288,10 @@ fn detect_by_filename(basename: &str) -> Option<&'static str> {
         "jenkinsfile" => Some("Jenkins"),
         "cmakelists.txt" => Some("CMake"),
         "build.gradle" | "build.gradle.kts" => Some("Gradle"),
-        "pom.xml" => Some("Maven"),
         "gemfile" | "rakefile" => Some("Ruby"),
         "vagrantfile" => Some("Vagrant"),
-        ".gitignore" | ".dockerignore" | ".editorconfig" => Some("Config"),
-        ".env" | ".env.local" | ".env.example" => Some("Env"),
+        // Non-code filenames → skip
+        // pom.xml, .gitignore, .dockerignore, .editorconfig, .env, etc.
         _ => None,
     }
 }
@@ -324,15 +302,29 @@ mod tests {
 
     #[test]
     fn test_detect_language() {
-        assert_eq!(detect_language("src/main.rs"), "Rust");
-        assert_eq!(detect_language("app.ts"), "TypeScript");
-        assert_eq!(detect_language("types.d.ts"), "TypeScript");
-        assert_eq!(detect_language("style.css"), "CSS");
-        assert_eq!(detect_language("style.scss"), "SCSS");
-        assert_eq!(detect_language("Makefile"), "Makefile");
-        assert_eq!(detect_language("Dockerfile"), "Dockerfile");
-        assert_eq!(detect_language("CMakeLists.txt"), "CMake");
-        assert_eq!(detect_language("views/index.blade.php"), "Blade");
+        assert_eq!(detect_language("src/main.rs"), Some("Rust"));
+        assert_eq!(detect_language("app.ts"), Some("TypeScript"));
+        assert_eq!(detect_language("types.d.ts"), Some("TypeScript"));
+        assert_eq!(detect_language("style.css"), Some("CSS"));
+        assert_eq!(detect_language("style.scss"), Some("SCSS"));
+        assert_eq!(detect_language("Makefile"), Some("Makefile"));
+        assert_eq!(detect_language("Dockerfile"), Some("Dockerfile"));
+        assert_eq!(detect_language("CMakeLists.txt"), Some("CMake"));
+        assert_eq!(detect_language("views/index.blade.php"), Some("Blade"));
+    }
+
+    #[test]
+    fn test_non_code_files_skipped() {
+        assert_eq!(detect_language("package.json"), None);
+        assert_eq!(detect_language("config.yaml"), None);
+        assert_eq!(detect_language("settings.toml"), None);
+        assert_eq!(detect_language("README.md"), None);
+        assert_eq!(detect_language("notes.txt"), None);
+        assert_eq!(detect_language("bun.lock"), None);
+        assert_eq!(detect_language("data.xml"), None);
+        assert_eq!(detect_language("icon.svg"), None);
+        assert_eq!(detect_language("app.ini"), None);
+        assert_eq!(detect_language("unknown.xyz"), None);
     }
 
     #[test]
@@ -340,5 +332,16 @@ mod tests {
         let files = r#"{"src/main.rs":"fn main() {}\n","src/lib.rs":"pub fn test() {}\n"}"#;
         let result = analyze_code(files);
         assert!(result.contains("Rust"));
+    }
+
+    #[test]
+    fn test_analyze_code_skips_non_code() {
+        let files = r##"{"src/main.rs":"fn main() {}\n","package.json":"{}\n","README.md":"Hello\n"}"##;
+        let result = analyze_code(files);
+        let parsed: AnalysisResult = serde_json::from_str(&result).unwrap();
+        // Only main.rs should be counted
+        assert_eq!(parsed.files, 1);
+        assert_eq!(parsed.languages.len(), 1);
+        assert_eq!(parsed.languages[0].name, "Rust");
     }
 }
