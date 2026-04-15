@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue';
-import { Settings, BarChart3, LayoutGrid, Clock } from 'lucide-vue-next';
+import { Settings, BarChart3, LayoutGrid, Clock, Activity } from 'lucide-vue-next';
 import { githubToken, analysisTimeout } from '@/utils/storage';
 import FeatureCard from '@/components/FeatureCard.vue';
 import FormInput from '@/components/FormInput.vue';
@@ -35,16 +35,7 @@ async function saveSettings() {
     <!-- Header -->
     <div class="flex justify-between items-center mb-5">
       <div class="flex items-center gap-2.5">
-        <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-          <circle cx="14" cy="14" r="14" fill="url(#lp-logo-gradient)"/>
-          <path d="M8 14h12M14 8v12" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
-          <defs>
-            <linearGradient id="lp-logo-gradient" x1="0" y1="0" x2="28" y2="28">
-              <stop offset="0" stop-color="#238636"/>
-              <stop offset="1" stop-color="#2ea043"/>
-            </linearGradient>
-          </defs>
-        </svg>
+        <Activity :size="28" class="text-lp-accent" />
         <span class="text-lg font-semibold bg-gradient-to-br from-lp-accent to-lp-accent-hover bg-clip-text text-transparent">Line Pulse</span>
       </div>
       <button
