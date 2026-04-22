@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { CircleAlert } from 'lucide-vue-next';
+import { CircleAlert, RefreshCw } from 'lucide-vue-next';
 import type { RepoRefType, Stats } from '@/utils/types';
 import type { AnalysisStatus } from '@/composables/useAnalysis';
 import StatsGrid from './StatsGrid.vue';
@@ -13,6 +13,10 @@ const props = defineProps<{
   repo: string;
   refName: string;
   refType: RepoRefType;
+}>();
+
+const emit = defineEmits<{
+  refresh: [];
 }>();
 
 function getRefLabel(refName: string, refType: RepoRefType): string {
@@ -40,11 +44,18 @@ function getRefLabel(refName: string, refType: RepoRefType): string {
       <CircleAlert :size="32" class="mx-auto mb-3 text-lp-error" />
       <p class="text-lp-error m-0 mb-2 text-sm font-medium">Analysis Failed</p>
       <p class="text-lp-fg-secondary m-0 text-[13px]">{{ error }}</p>
+      <button
+        class="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-lp-fg-secondary bg-lp-card-bg border border-lp-border rounded-lg cursor-pointer transition-colors hover:text-lp-fg hover:border-lp-fg-secondary"
+        @click.prevent.stop="$emit('refresh')"
+      >
+        <RefreshCw :size="12" />
+        Retry
+      </button>
     </div>
 
     <!-- Success -->
     <template v-else-if="status === 'success' && stats">
-      <div class="mb-4">
+      <div class="mb-4 flex items-center justify-between">
         <div class="flex items-center gap-2 min-w-0">
           <span
             class="min-w-0 truncate text-[13px] text-lp-fg-secondary"
@@ -60,6 +71,13 @@ function getRefLabel(refName: string, refType: RepoRefType): string {
             {{ refType }}: {{ getRefLabel(props.refName, props.refType) }}
           </span>
         </div>
+        <button
+          class="shrink-0 p-1.5 text-lp-fg-secondary bg-transparent border-none rounded-md cursor-pointer transition-colors hover:text-lp-fg hover:bg-lp-card-bg"
+          title="Refresh"
+          @click.prevent.stop="$emit('refresh')"
+        >
+          <RefreshCw :size="14" />
+        </button>
       </div>
 
       <StatsGrid :stats="stats" />

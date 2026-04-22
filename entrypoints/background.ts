@@ -63,10 +63,12 @@ async function handleAnalyze(payload: AnalyzeRequest, signal: AbortSignal): Prom
     }
 
     const cacheKey = getRequestKey(owner, repo, ref);
-    const cached = await getCache(cacheKey);
-    if (cached) {
-      if (debug) console.log(`[Line Pulse] Cache hit for ${cacheKey}`);
-      return cached;
+    if (!payload.force) {
+      const cached = await getCache(cacheKey);
+      if (cached) {
+        if (debug) console.log(`[Line Pulse] Cache hit for ${cacheKey}`);
+        return cached;
+      }
     }
 
     // Download

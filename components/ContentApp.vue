@@ -23,6 +23,12 @@ function onAnalyze() {
   registerClickOutside();
 }
 
+function onRefresh() {
+  const repo = getRepoInfo();
+  if (!repo) return;
+  startAnalysis(repo, true);
+}
+
 onUnmounted(() => {
   unregisterClickOutside();
 });
@@ -43,6 +49,7 @@ onUnmounted(() => {
       :repo="repoInfo?.repo ?? ''"
       :ref-name="repoInfo?.ref?.name ?? ''"
       :ref-type="repoInfo?.ref?.type ?? 'branch'"
+      @refresh="onRefresh"
     />
   </div>
 </template>

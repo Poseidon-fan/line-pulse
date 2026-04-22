@@ -14,7 +14,7 @@ export function useAnalysis() {
 
   let requestId = 0;
 
-  async function startAnalysis(request: AnalyzeRequest) {
+  async function startAnalysis(request: AnalyzeRequest, force = false) {
     const currentId = ++requestId;
     const { owner, repo, ref: requestedRef } = request;
 
@@ -30,7 +30,7 @@ export function useAnalysis() {
 
     try {
       const result: AnalyzeResponse = await Promise.race([
-        sendAnalyzeRequest(request),
+        sendAnalyzeRequest({ ...request, force }),
         new Promise<never>((_, reject) => {
           timeoutTimer = setTimeout(() => reject(new Error('Analysis timed out')), timeoutMs);
         }),

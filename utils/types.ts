@@ -21,6 +21,7 @@ export interface AnalyzeRequest {
   owner: string;
   repo: string;
   ref?: RepoRef;
+  force?: boolean;
 }
 
 export type AnalyzeResponse =
