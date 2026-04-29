@@ -1,6 +1,6 @@
-import { ref } from 'vue';
-import type { AnalyzeRequest, RepoRef, Stats, AnalyzeResponse } from '@/utils/types';
-import { sendAnalyzeRequest } from '@/utils/messaging';
+import { ref, computed } from 'vue';
+import type { AnalyzeRequest, FilterPattern, RepoRef, Stats, AnalyzeResponse } from '@/utils/types';
+import { sendAnalyzeRequest, sendFilterAnalyzeRequest } from '@/utils/messaging';
 import { analysisTimeout } from '@/utils/storage';
 
 export type AnalysisStatus = 'idle' | 'loading' | 'success' | 'error';
@@ -11,6 +11,8 @@ export function useAnalysis() {
   const repoInfo = ref<{ owner: string; repo: string; ref?: RepoRef } | null>(null);
   const error = ref<string | null>(null);
   const panelOpen = ref(false);
+  const activeFilter = ref<FilterPattern | null>(null);
+  const isFiltered = computed(() => activeFilter.value !== null);
 
   let requestId = 0;
 
@@ -21,6 +23,7 @@ export function useAnalysis() {
     repoInfo.value = { owner, repo, ref: requestedRef };
     stats.value = null;
     error.value = null;
+    activeFilter.value = null;
     status.value = 'loading';
     panelOpen.value = true;
 
@@ -61,6 +64,60 @@ export function useAnalysis() {
     }
   }
 
+  async function applyFilter(filter: FilterPattern | null) {
+    const info = repoInfo.value;
+    if (!info?.ref) return;
+
+    const currentId = ++requestId;
+    status.value = 'loading';
+
+    if (filter === null) {
+      activeFilter.value = null;
+      try {
+        const result = await sendAnalyzeRequest({
+          owner: info.owner,
+          repo: info.repo,
+          ref: info.ref,
+        });
+        if (currentId !== requestId) return;
+        if (result.success) {
+          stats.value = result.data.stats;
+          status.value = 'success';
+        } else {
+          error.value = result.error;
+          status.value = 'error';
+        }
+      } catch (err: unknown) {
+        if (currentId !== requestId) return;
+        error.value = err instanceof Error ? err.message : 'Unknown error';
+        status.value = 'error';
+      }
+      return;
+    }
+
+    activeFilter.value = filter;
+    try {
+      const result = await sendFilterAnalyzeRequest({
+        owner: info.owner,
+        repo: info.repo,
+        ref: info.ref,
+        filter,
+      });
+      if (currentId !== requestId) return;
+      if (result.success) {
+        stats.value = result.data.stats;
+        status.value = 'success';
+      } else {
+        error.value = result.error;
+        status.value = 'error';
+      }
+    } catch (err: unknown) {
+      if (currentId !== requestId) return;
+      error.value = err instanceof Error ? err.message : 'Unknown error';
+      status.value = 'error';
+    }
+  }
+
   function closePanel() {
     panelOpen.value = false;
     status.value = 'idle';
@@ -74,7 +131,10 @@ export function useAnalysis() {
     repoInfo,
     error,
     panelOpen,
+    activeFilter,
+    isFiltered,
     startAnalysis,
+    applyFilter,
     closePanel,
   };
 }

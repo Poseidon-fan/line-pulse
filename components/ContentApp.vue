@@ -11,7 +11,7 @@ const props = defineProps<{
   shadowHost: HTMLElement;
 }>();
 
-const { status, stats, repoInfo, error, panelOpen, startAnalysis, closePanel } = useAnalysis();
+const { status, stats, repoInfo, error, panelOpen, isFiltered, startAnalysis, applyFilter, closePanel } = useAnalysis();
 
 const { register: registerClickOutside, unregister: unregisterClickOutside } =
   useClickOutside(() => props.shadowHost, closePanel);
@@ -49,7 +49,9 @@ onUnmounted(() => {
       :repo="repoInfo?.repo ?? ''"
       :ref-name="repoInfo?.ref?.name ?? ''"
       :ref-type="repoInfo?.ref?.type ?? 'branch'"
+      :is-filtered="isFiltered"
       @refresh="onRefresh"
+      @filter="applyFilter"
     />
   </div>
 </template>

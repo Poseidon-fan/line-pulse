@@ -32,3 +32,15 @@ export interface CacheEntry {
   response: AnalyzeResponse & { success: true };
   timestamp: number;
 }
+
+export interface FilterPattern {
+  include: string[];
+  exclude: string[];
+}
+
+export interface FilterAnalyzeRequest {
+  owner: string;
+  repo: string;
+  ref: RepoRef;
+  filter: FilterPattern;
+}
