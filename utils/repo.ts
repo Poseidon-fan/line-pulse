@@ -90,7 +90,7 @@ function normalizeRefType(
   return 'branch';
 }
 
-function getCurrentRef(): RepoRef | undefined {
+function getRefFromEmbeddedData(): RepoRef | undefined {
   const payload = getEmbeddedPayload();
   if (!payload) return undefined;
 
@@ -109,18 +109,21 @@ function getCurrentRef(): RepoRef | undefined {
   };
 }
 
-export function isRepoPage(): boolean {
-  return getRepoPathInfo() !== null;
+function getRefFromUrl(): RepoRef | undefined {
+  const match = window.location.pathname.match(/^\/[^/]+\/[^/]+\/tree\/([^/]+)/);
+  if (!match) return undefined;
+
+  const name = decodeURIComponent(match[1]);
+  const type: RepoRefType = /^[0-9a-f]{40}$/i.test(name) ? 'commit' : 'branch';
+  return { name, type };
 }
 
-export function getRepoInfo(): AnalyzeRequest | null {
-  const pathInfo = getRepoPathInfo();
-  if (!pathInfo) return null;
+function getCurrentRef(): RepoRef | undefined {
+  return getRefFromEmbeddedData() ?? getRefFromUrl();
+}
 
-  const ref = getCurrentRef();
-  return ref
-    ? { owner: pathInfo.owner, repo: pathInfo.repo, ref }
-    : { owner: pathInfo.owner, repo: pathInfo.repo };
+export function isRepoPage(): boolean {
+  return getRepoPathInfo() !== null;
 }
 
 export function findCodeButton(): HTMLButtonElement | null {
@@ -137,3 +140,14 @@ export function findCodeButton(): HTMLButtonElement | null {
     (el) => el.textContent?.trim() === 'Code',
   ) ?? null;
 }
+
+export function getRepoInfo(): AnalyzeRequest | null {
+  const pathInfo = getRepoPathInfo();
+  if (!pathInfo) return null;
+
+  const ref = getCurrentRef();
+  return ref
+    ? { owner: pathInfo.owner, repo: pathInfo.repo, ref }
+    : { owner: pathInfo.owner, repo: pathInfo.repo };
+}
+

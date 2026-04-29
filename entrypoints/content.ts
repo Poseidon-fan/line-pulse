@@ -49,29 +49,54 @@ export default defineContentScript({
       }
     }
 
-    // WXT built-in SPA navigation detection (patches history.pushState/replaceState)
+    // Wait for the Code button to appear via MutationObserver.
+    // Resolves immediately if the button already exists.
+    function waitForCodeButton(signal: AbortSignal): Promise<void> {
+      if (findCodeButton()) return Promise.resolve();
+
+      return new Promise<void>((resolve) => {
+        const observer = new MutationObserver(() => {
+          if (findCodeButton()) {
+            observer.disconnect();
+            resolve();
+          }
+        });
+
+        signal.addEventListener('abort', () => {
+          observer.disconnect();
+          resolve();
+        });
+
+        observer.observe(document.body, { childList: true, subtree: true });
+      });
+    }
+
+    // On SPA navigation: clean up old UI, wait for Code button, then mount
     ctx.addEventListener(window, 'wxt:locationchange', () => {
       cleanup();
-      // GitHub renders progressively after navigation — the Code button
-      // may not exist yet. Retry a few times with increasing delays.
-      let attempts = 0;
-      const maxAttempts = 5;
-      function retryMount() {
-        if (ui || attempts >= maxAttempts) return;
-        attempts++;
-        tryMount().then(() => {
-          if (!ui) setTimeout(retryMount, attempts * 200);
-        });
-      }
-      retryMount();
+      const abortController = new AbortController();
+
+      // Abort the observer if another navigation happens before mount
+      const onNextNav = () => {
+        abortController.abort();
+        window.removeEventListener('wxt:locationchange', onNextNav);
+      };
+      window.addEventListener('wxt:locationchange', onNextNav);
+
+      waitForCodeButton(abortController.signal).then(() => {
+        window.removeEventListener('wxt:locationchange', onNextNav);
+        if (!abortController.signal.aborted) {
+          tryMount();
+        }
+      });
     });
 
     // Initial mount
     if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', () => tryMount());
-    } else {
-      tryMount();
+      await new Promise<void>((r) => document.addEventListener('DOMContentLoaded', () => r()));
     }
+    await waitForCodeButton(ctx.signal);
+    tryMount();
   },
 });
 
