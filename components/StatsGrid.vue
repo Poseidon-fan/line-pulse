@@ -2,17 +2,25 @@
 import type { Stats } from '@/utils/types';
 import { formatNumber } from '@/utils/format';
 
-defineProps<{ stats: Stats }>();
+const props = defineProps<{ stats: Stats }>();
 
-const cards = [
-  { key: 'total', label: 'Lines' },
+interface Card {
+  key: 'lines' | 'files' | 'languages';
+  label: string;
+}
+
+const cards: Card[] = [
+  { key: 'lines', label: 'Lines' },
   { key: 'files', label: 'Files' },
   { key: 'languages', label: 'Languages' },
-] as const;
+];
 
-function getValue(stats: Stats, key: 'total' | 'files' | 'languages'): string {
-  if (key === 'languages') return formatNumber(stats.languages.length);
-  return formatNumber(stats[key]);
+function getValue(key: Card['key']): string {
+  switch (key) {
+    case 'lines': return formatNumber(props.stats.totalLines);
+    case 'files': return formatNumber(props.stats.files);
+    case 'languages': return formatNumber(props.stats.languages.length);
+  }
 }
 </script>
 
@@ -23,8 +31,8 @@ function getValue(stats: Stats, key: 'total' | 'files' | 'languages'): string {
       :key="card.key"
       class="text-center py-3.5 px-2 bg-lp-card-bg rounded-[10px] border border-lp-border"
     >
-      <span class="block text-[22px] font-bold text-lp-fg leading-tight">
-        {{ getValue(stats, card.key) }}
+      <span class="block text-[22px] font-bold text-lp-fg leading-tight tabular-nums">
+        {{ getValue(card.key) }}
       </span>
       <span class="block text-[11px] text-lp-fg-secondary mt-1 uppercase tracking-wide">
         {{ card.label }}

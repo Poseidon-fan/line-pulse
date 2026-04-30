@@ -200,8 +200,10 @@ function clearFilter() {
           v-for="lang in stats.languages.slice(0, 8)"
           :key="lang.name"
           :name="lang.name"
-          :lines="lang.lines"
-          :total="stats.total"
+          :code="lang.code"
+          :comments="lang.comments"
+          :blanks="lang.blanks"
+          :total-lines="stats.totalLines"
           :color="lang.color"
         />
       </div>

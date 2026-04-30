@@ -1,12 +1,23 @@
-import type { Stats, LanguageStats } from '@/utils/types';
+import type { Stats } from '@/utils/types';
 import initWasmModule from '../wasm/pkg/line_pulse_wasm_bg.wasm?init';
 // @ts-ignore wasm-bindgen does not generate a declaration file for this helper module.
 import * as wasmBindings from '../wasm/pkg/line_pulse_wasm_bg.js';
 
-interface WasmAnalysisResult {
-  total: number;
+interface WasmLanguageStats {
+  name: string;
+  color: string;
   files: number;
-  languages: LanguageStats[];
+  code: number;
+  comments: number;
+  blanks: number;
+}
+
+interface WasmAnalysisResult {
+  files: number;
+  total_code: number;
+  total_comments: number;
+  total_blanks: number;
+  languages: WasmLanguageStats[];
 }
 
 interface WasmExports extends WebAssembly.Exports {
@@ -53,12 +64,19 @@ export async function analyzeWithWasm(files: Record<string, string>): Promise<St
   await ensureWasmReady();
   const result: WasmAnalysisResult = JSON.parse(analyze_code(JSON.stringify(files)));
   return {
-    total: result.total,
     files: result.files,
+    totalCode: result.total_code,
+    totalComments: result.total_comments,
+    totalBlanks: result.total_blanks,
+    totalLines: result.total_code + result.total_comments + result.total_blanks,
     languages: result.languages.map((l) => ({
       name: l.name,
-      lines: l.lines,
       color: l.color,
+      files: l.files,
+      code: l.code,
+      comments: l.comments,
+      blanks: l.blanks,
+      lines: l.code + l.comments + l.blanks,
     })),
   };
 }

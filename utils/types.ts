@@ -1,7 +1,12 @@
 export interface LanguageStats {
   name: string;
-  lines: number;
   color: string;
+  files: number;
+  code: number;
+  comments: number;
+  blanks: number;
+  /** Derived: code + comments + blanks. */
+  lines: number;
 }
 
 export type RepoRefType = 'branch' | 'tag' | 'commit';
@@ -12,8 +17,12 @@ export interface RepoRef {
 }
 
 export interface Stats {
-  total: number;
   files: number;
+  totalCode: number;
+  totalComments: number;
+  totalBlanks: number;
+  /** Derived: totalCode + totalComments + totalBlanks. */
+  totalLines: number;
   languages: LanguageStats[];
 }
 
