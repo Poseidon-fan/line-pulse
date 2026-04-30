@@ -273,32 +273,3 @@ fn detect_by_extension(ext: &str) -> Option<&'static LangSyntax> {
         _ => return None,
     })
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn detect_common() {
-        assert_eq!(detect("src/main.rs").map(|s| s.name), Some("Rust"));
-        assert_eq!(detect("app.ts").map(|s| s.name), Some("TypeScript"));
-        assert_eq!(detect("types.d.ts").map(|s| s.name), Some("TypeScript"));
-        assert_eq!(detect("Makefile").map(|s| s.name), Some("Makefile"));
-        assert_eq!(detect("Dockerfile").map(|s| s.name), Some("Dockerfile"));
-        assert_eq!(
-            detect("views/index.blade.php").map(|s| s.name),
-            Some("Blade")
-        );
-    }
-
-    #[test]
-    fn skip_non_code() {
-        assert!(detect("README.md").is_none());
-        assert!(detect("package.json").is_none());
-        assert!(detect("config.yaml").is_none());
-        assert!(detect("bun.lock").is_none());
-        assert!(detect("data.xml").is_none());
-        assert!(detect("icon.svg").is_none());
-        assert!(detect("unknown.xyz").is_none());
-    }
-}

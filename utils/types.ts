@@ -56,6 +56,21 @@ export interface CacheEntry {
   timestamp: number;
 }
 
+/** Compact snapshot of an analysis result, persisted in user history. */
+export interface HistoryEntry {
+  owner: string;
+  repo: string;
+  ref: RepoRef;
+  files: number;
+  totalCode: number;
+  totalLines: number;
+  totalLanguages: number;
+  /** Up to a few top languages by code count, used for the mini bar in popup. */
+  topLanguages: { name: string; color: string; code: number }[];
+  /** Unix epoch ms — when this entry was last written. */
+  timestamp: number;
+}
+
 export interface FilterPattern {
   include: string[];
   exclude: string[];

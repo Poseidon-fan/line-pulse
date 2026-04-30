@@ -1,9 +1,25 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import { CircleAlert, RefreshCw, Filter, ChevronDown, ChevronUp } from 'lucide-vue-next';
+import { ref, computed } from 'vue';
+import {
+  CircleAlert,
+  RefreshCw,
+  Filter,
+  ChevronDown,
+  ChevronUp,
+  Share2,
+  Check,
+  ClipboardCopy,
+  Download,
+} from 'lucide-vue-next';
 import type { AnalyzeProgress, RepoRefType, Stats, FilterPattern } from '@/utils/types';
 import type { AnalysisStatus } from '@/composables/useAnalysis';
 import { FILTER_PRESETS } from '@/utils/filter-presets';
+import {
+  copyExportToClipboard,
+  downloadExport,
+  type ExportContext,
+  type ExportFormat,
+} from '@/utils/export';
 import StatsGrid from './StatsGrid.vue';
 import LanguageBar from './LanguageBar.vue';
 import ProgressIndicator from './ProgressIndicator.vue';
@@ -29,6 +45,45 @@ const filterOpen = ref(false);
 const includeInput = ref('');
 const excludeInput = ref('');
 const activePreset = ref<string | null>(null);
+
+const exportOpen = ref(false);
+const copyState = ref<'idle' | 'success' | 'error'>('idle');
+let copyResetTimer: ReturnType<typeof setTimeout> | null = null;
+
+const exportContext = computed<ExportContext | null>(() => {
+  if (!props.stats) return null;
+  return {
+    owner: props.owner,
+    repo: props.repo,
+    ref: { name: props.refName, type: props.refType },
+    stats: props.stats,
+    filtered: props.isFiltered,
+  };
+});
+
+function toggleExport(event: MouseEvent) {
+  event.stopPropagation();
+  exportOpen.value = !exportOpen.value;
+}
+
+async function copyMarkdown() {
+  const ctx = exportContext.value;
+  if (!ctx) return;
+  const ok = await copyExportToClipboard(ctx, 'markdown');
+  copyState.value = ok ? 'success' : 'error';
+  if (copyResetTimer) clearTimeout(copyResetTimer);
+  copyResetTimer = setTimeout(() => {
+    copyState.value = 'idle';
+    exportOpen.value = false;
+  }, 1500);
+}
+
+function download(format: ExportFormat) {
+  const ctx = exportContext.value;
+  if (!ctx) return;
+  downloadExport(ctx, format);
+  exportOpen.value = false;
+}
 
 function getRefLabel(refName: string, refType: RepoRefType): string {
   if (!refName) return '';
@@ -71,6 +126,7 @@ function clearFilter() {
 <template>
   <div
     class="absolute top-full left-0 z-[9999] w-[340px] font-lp-sans bg-lp-bg border border-lp-border rounded-xl shadow-[0_16px_48px_rgba(0,0,0,0.2),0_0_0_1px_rgba(0,0,0,0.05)] p-5 mt-3 text-lp-fg animate-[lp-slide-up_0.3s_ease]"
+    @click="exportOpen = false"
   >
     <!-- Loading -->
     <ProgressIndicator
@@ -110,13 +166,68 @@ function clearFilter() {
             {{ refType }}: {{ getRefLabel(props.refName, props.refType) }}
           </span>
         </div>
-        <button
-          class="shrink-0 p-1.5 text-lp-fg-secondary bg-transparent border-none rounded-md cursor-pointer transition-colors hover:text-lp-fg hover:bg-lp-card-bg"
-          title="Refresh"
-          @click.prevent.stop="$emit('refresh')"
-        >
-          <RefreshCw :size="14" />
-        </button>
+        <div class="shrink-0 flex items-center gap-0.5">
+          <!-- Export menu -->
+          <div class="relative">
+            <button
+              class="p-1.5 bg-transparent border-none rounded-md cursor-pointer transition-colors"
+              :class="exportOpen
+                ? 'text-lp-accent bg-lp-accent/10'
+                : 'text-lp-fg-secondary hover:text-lp-fg hover:bg-lp-card-bg'"
+              title="Export"
+              @click="toggleExport"
+            >
+              <Share2 :size="14" />
+            </button>
+            <div
+              v-if="exportOpen"
+              class="absolute right-0 top-full mt-1 z-10 min-w-[170px] py-1 bg-lp-bg border border-lp-border rounded-lg shadow-[0_8px_24px_rgba(0,0,0,0.18)] animate-[lp-slide-up_0.15s_ease]"
+              @click.stop
+            >
+              <button
+                class="w-full flex items-center gap-2 px-3 py-1.5 text-[12px] text-lp-fg bg-transparent border-none cursor-pointer transition-colors hover:bg-lp-card-bg text-left"
+                @click.prevent.stop="copyMarkdown"
+              >
+                <component
+                  :is="copyState === 'success' ? Check : ClipboardCopy"
+                  :size="12"
+                  :class="copyState === 'success' ? 'text-lp-accent' : 'text-lp-fg-secondary'"
+                />
+                <span>{{ copyState === 'success' ? 'Copied!' : copyState === 'error' ? 'Copy failed' : 'Copy as Markdown' }}</span>
+              </button>
+              <div class="my-1 border-t border-lp-border" />
+              <button
+                class="w-full flex items-center gap-2 px-3 py-1.5 text-[12px] text-lp-fg bg-transparent border-none cursor-pointer transition-colors hover:bg-lp-card-bg text-left"
+                @click.prevent.stop="download('markdown')"
+              >
+                <Download :size="12" class="text-lp-fg-secondary" />
+                <span>Download .md</span>
+              </button>
+              <button
+                class="w-full flex items-center gap-2 px-3 py-1.5 text-[12px] text-lp-fg bg-transparent border-none cursor-pointer transition-colors hover:bg-lp-card-bg text-left"
+                @click.prevent.stop="download('json')"
+              >
+                <Download :size="12" class="text-lp-fg-secondary" />
+                <span>Download .json</span>
+              </button>
+              <button
+                class="w-full flex items-center gap-2 px-3 py-1.5 text-[12px] text-lp-fg bg-transparent border-none cursor-pointer transition-colors hover:bg-lp-card-bg text-left"
+                @click.prevent.stop="download('csv')"
+              >
+                <Download :size="12" class="text-lp-fg-secondary" />
+                <span>Download .csv</span>
+              </button>
+            </div>
+          </div>
+
+          <button
+            class="p-1.5 text-lp-fg-secondary bg-transparent border-none rounded-md cursor-pointer transition-colors hover:text-lp-fg hover:bg-lp-card-bg"
+            title="Refresh"
+            @click.prevent.stop="$emit('refresh')"
+          >
+            <RefreshCw :size="14" />
+          </button>
+        </div>
       </div>
 
       <!-- Filter Section -->

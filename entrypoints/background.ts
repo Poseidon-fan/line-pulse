@@ -13,6 +13,7 @@ import { unzip } from '@/utils/zip';
 import { analyzeWithWasm } from '@/utils/wasm';
 import { filterFiles } from '@/utils/filter';
 import { getCache, setCache } from '@/utils/cache';
+import { addHistory, buildHistoryEntry } from '@/utils/history';
 
 const inFlightRequests = new Map<string, AbortController>();
 
@@ -131,6 +132,11 @@ async function handleAnalyze(
       const cached = await getCache(cacheKey);
       if (cached) {
         if (debug) console.log(`[Line Pulse] Cache hit for ${cacheKey}`);
+        if (cached.success) {
+          // Refresh the history entry's timestamp so cached lookups bubble
+          // back up to the top of the recent list.
+          await addHistory(buildHistoryEntry(owner, repo, ref, cached.data.stats));
+        }
         return cached;
       }
     }
@@ -173,6 +179,7 @@ async function handleAnalyze(
     };
 
     await setCache(cacheKey, response);
+    await addHistory(buildHistoryEntry(owner, repo, ref, stats));
     return response;
   } catch (err: unknown) {
     if (signal.aborted) {

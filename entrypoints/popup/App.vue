@@ -2,23 +2,38 @@
 import { ref, onMounted, onUnmounted } from 'vue';
 import { Settings, BarChart3, LayoutGrid, Clock, Activity } from 'lucide-vue-next';
 import { githubToken, analysisTimeout } from '@/utils/storage';
+import {
+  clearHistory,
+  getHistory,
+  removeHistory,
+  watchHistory,
+} from '@/utils/history';
+import type { HistoryEntry } from '@/utils/types';
 import FeatureCard from '@/components/FeatureCard.vue';
 import FormInput from '@/components/FormInput.vue';
+import HistoryList from '@/components/HistoryList.vue';
 import '@/assets/tailwind.css';
 
 const showSettings = ref(false);
 const token = ref('');
 const timeout = ref(15);
 const saved = ref(false);
+const history = ref<HistoryEntry[]>([]);
 let savedTimer: ReturnType<typeof setTimeout> | null = null;
+let unwatchHistory: (() => void) | null = null;
 
 onMounted(async () => {
   token.value = await githubToken.getValue();
   timeout.value = await analysisTimeout.getValue();
+  history.value = await getHistory();
+  unwatchHistory = watchHistory((entries) => {
+    history.value = entries;
+  });
 });
 
 onUnmounted(() => {
   if (savedTimer) clearTimeout(savedTimer);
+  unwatchHistory?.();
 });
 
 async function saveSettings() {
@@ -27,6 +42,17 @@ async function saveSettings() {
   saved.value = true;
   if (savedTimer) clearTimeout(savedTimer);
   savedTimer = setTimeout(() => { saved.value = false; }, 2000);
+}
+
+async function onRemoveHistory(entry: HistoryEntry) {
+  await removeHistory(entry.owner, entry.repo, entry.ref);
+}
+
+async function onClearHistory() {
+  if (history.value.length === 0) return;
+  const ok = confirm('Clear all history?');
+  if (!ok) return;
+  await clearHistory();
 }
 </script>
 
@@ -73,28 +99,37 @@ async function saveSettings() {
       </button>
     </div>
 
-    <!-- Main Content -->
-    <div v-else class="flex flex-col gap-3">
-      <FeatureCard
-        :icon="BarChart3"
-        title="Code Analysis"
-        description="Click the Line Pulse button on any GitHub repo to analyze code lines"
-        highlight="Line Pulse"
-      />
-      <FeatureCard
-        :icon="LayoutGrid"
-        title="Language Stats"
-        description="View breakdown by language with beautiful visualizations"
-      />
-      <FeatureCard
-        :icon="Clock"
-        title="Fast & Private"
-        description="Analysis runs locally in your browser, no data sent to servers"
+    <!-- Main Content: History (when present) or Onboarding (empty state) -->
+    <div v-else>
+      <HistoryList
+        v-if="history.length > 0"
+        :entries="history"
+        @remove="onRemoveHistory"
+        @clear="onClearHistory"
       />
 
-      <div class="flex items-center gap-2 p-3 bg-lp-accent/8 rounded-lg mt-1">
-        <span class="text-[11px] font-semibold py-0.5 px-2 bg-lp-accent text-white rounded">Tip</span>
-        <span class="text-xs text-lp-fg-secondary">Results appear below the button on GitHub</span>
+      <div v-else class="flex flex-col gap-3">
+        <FeatureCard
+          :icon="BarChart3"
+          title="Code Analysis"
+          description="Click the Line Pulse button on any GitHub repo to analyze code lines"
+          highlight="Line Pulse"
+        />
+        <FeatureCard
+          :icon="LayoutGrid"
+          title="Language Stats"
+          description="View breakdown by language with beautiful visualizations"
+        />
+        <FeatureCard
+          :icon="Clock"
+          title="Fast & Private"
+          description="Analysis runs locally in your browser, no data sent to servers"
+        />
+
+        <div class="flex items-center gap-2 p-3 bg-lp-accent/8 rounded-lg mt-1">
+          <span class="text-[11px] font-semibold py-0.5 px-2 bg-lp-accent text-white rounded">Tip</span>
+          <span class="text-xs text-lp-fg-secondary">Results appear below the button on GitHub</span>
+        </div>
       </div>
     </div>
 
