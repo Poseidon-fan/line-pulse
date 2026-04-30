@@ -112,7 +112,7 @@ export function useAnalysis() {
     }
 
     activeFilter.value = filter;
-    progress.value = { stage: 'analyzing', fileCount: 0 };
+    progress.value = { stage: 'analyzing', processed: 0, total: 0 };
     try {
       const result = await sendFilterAnalyzeRequest({
         owner: info.owner,

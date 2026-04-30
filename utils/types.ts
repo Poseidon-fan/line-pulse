@@ -37,7 +37,7 @@ export type AnalyzeProgress =
   | { stage: 'resolving' }
   | { stage: 'downloading'; loaded: number; total?: number }
   | { stage: 'unzipping' }
-  | { stage: 'analyzing'; fileCount: number };
+  | { stage: 'analyzing'; processed: number; total: number };
 
 /** Messages sent from background → content over the analyze port. */
 export type AnalyzePortMessage =

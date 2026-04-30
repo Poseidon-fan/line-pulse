@@ -39,12 +39,21 @@ const view = computed<StageView>(() => {
     }
     case 'unzipping':
       return { title: 'Extracting archive…', detail: 'Reading files', ratio: null };
-    case 'analyzing':
+    case 'analyzing': {
+      if (p.total > 0) {
+        const processed = Math.min(p.processed, p.total);
+        return {
+          title: 'Analyzing code…',
+          detail: `${processed.toLocaleString()} / ${p.total.toLocaleString()} files`,
+          ratio: processed / p.total,
+        };
+      }
       return {
         title: 'Analyzing code…',
-        detail: p.fileCount > 0 ? `${p.fileCount.toLocaleString()} files` : 'Counting lines',
+        detail: 'Counting lines',
         ratio: null,
       };
+    }
   }
 });
 

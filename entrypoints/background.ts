@@ -161,8 +161,10 @@ async function handleAnalyze(
     if (debug) console.log(`[Line Pulse] Unzip: ${(performance.now() - t0).toFixed(0)}ms (${fileCount} files)`);
 
     // Analyze
-    onProgress({ stage: 'analyzing', fileCount });
-    const stats = await analyzeWithWasm(files);
+    onProgress({ stage: 'analyzing', processed: 0, total: fileCount });
+    const stats = await analyzeWithWasm(files, (processed, total) => {
+      onProgress({ stage: 'analyzing', processed, total });
+    });
     if (debug) console.log(`[Line Pulse] Total: ${(performance.now() - t0).toFixed(0)}ms`);
 
     const response: AnalyzeResponse & { success: true } = {
