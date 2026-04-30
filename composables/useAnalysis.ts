@@ -1,6 +1,13 @@
 import { ref, computed } from 'vue';
-import type { AnalyzeRequest, FilterPattern, RepoRef, Stats, AnalyzeResponse } from '@/utils/types';
-import { sendAnalyzeRequest, sendFilterAnalyzeRequest } from '@/utils/messaging';
+import type {
+  AnalyzeProgress,
+  AnalyzeRequest,
+  AnalyzeResponse,
+  FilterPattern,
+  RepoRef,
+  Stats,
+} from '@/utils/types';
+import { sendFilterAnalyzeRequest, streamAnalyzeRequest } from '@/utils/messaging';
 import { analysisTimeout } from '@/utils/storage';
 
 export type AnalysisStatus = 'idle' | 'loading' | 'success' | 'error';
@@ -11,6 +18,7 @@ export function useAnalysis() {
   const repoInfo = ref<{ owner: string; repo: string; ref?: RepoRef } | null>(null);
   const error = ref<string | null>(null);
   const panelOpen = ref(false);
+  const progress = ref<AnalyzeProgress | null>(null);
   const activeFilter = ref<FilterPattern | null>(null);
   const isFiltered = computed(() => activeFilter.value !== null);
 
@@ -24,16 +32,19 @@ export function useAnalysis() {
     stats.value = null;
     error.value = null;
     activeFilter.value = null;
+    progress.value = { stage: 'resolving' };
     status.value = 'loading';
     panelOpen.value = true;
 
     const timeoutMs = (await analysisTimeout.getValue()) * 1000;
-
     let timeoutTimer: ReturnType<typeof setTimeout> | undefined;
 
     try {
       const result: AnalyzeResponse = await Promise.race([
-        sendAnalyzeRequest({ ...request, force }),
+        streamAnalyzeRequest({ ...request, force }, (p) => {
+          // Drop late progress events from a stale request.
+          if (currentId === requestId) progress.value = p;
+        }),
         new Promise<never>((_, reject) => {
           timeoutTimer = setTimeout(() => reject(new Error('Analysis timed out')), timeoutMs);
         }),
@@ -41,7 +52,6 @@ export function useAnalysis() {
 
       clearTimeout(timeoutTimer);
 
-      // Ignore stale results from a previous request
       if (currentId !== requestId) return;
 
       if (result.success) {
@@ -61,6 +71,8 @@ export function useAnalysis() {
       if (currentId !== requestId) return;
       error.value = err instanceof Error ? err.message : 'Unknown error';
       status.value = 'error';
+    } finally {
+      if (currentId === requestId) progress.value = null;
     }
   }
 
@@ -73,12 +85,14 @@ export function useAnalysis() {
 
     if (filter === null) {
       activeFilter.value = null;
+      progress.value = { stage: 'resolving' };
       try {
-        const result = await sendAnalyzeRequest({
-          owner: info.owner,
-          repo: info.repo,
-          ref: info.ref,
-        });
+        const result = await streamAnalyzeRequest(
+          { owner: info.owner, repo: info.repo, ref: info.ref },
+          (p) => {
+            if (currentId === requestId) progress.value = p;
+          },
+        );
         if (currentId !== requestId) return;
         if (result.success) {
           stats.value = result.data.stats;
@@ -91,11 +105,14 @@ export function useAnalysis() {
         if (currentId !== requestId) return;
         error.value = err instanceof Error ? err.message : 'Unknown error';
         status.value = 'error';
+      } finally {
+        if (currentId === requestId) progress.value = null;
       }
       return;
     }
 
     activeFilter.value = filter;
+    progress.value = { stage: 'analyzing', fileCount: 0 };
     try {
       const result = await sendFilterAnalyzeRequest({
         owner: info.owner,
@@ -115,6 +132,8 @@ export function useAnalysis() {
       if (currentId !== requestId) return;
       error.value = err instanceof Error ? err.message : 'Unknown error';
       status.value = 'error';
+    } finally {
+      if (currentId === requestId) progress.value = null;
     }
   }
 
@@ -123,6 +142,7 @@ export function useAnalysis() {
     status.value = 'idle';
     stats.value = null;
     error.value = null;
+    progress.value = null;
   }
 
   return {
@@ -131,6 +151,7 @@ export function useAnalysis() {
     repoInfo,
     error,
     panelOpen,
+    progress,
     activeFilter,
     isFiltered,
     startAnalysis,

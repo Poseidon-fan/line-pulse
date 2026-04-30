@@ -11,7 +11,7 @@ const props = defineProps<{
   shadowHost: HTMLElement;
 }>();
 
-const { status, stats, repoInfo, error, panelOpen, isFiltered, startAnalysis, applyFilter, closePanel } = useAnalysis();
+const { status, stats, repoInfo, error, panelOpen, progress, isFiltered, startAnalysis, applyFilter, closePanel } = useAnalysis();
 
 const { register: registerClickOutside, unregister: unregisterClickOutside } =
   useClickOutside(() => props.shadowHost, closePanel);
@@ -45,6 +45,7 @@ onUnmounted(() => {
       :status="status"
       :stats="stats"
       :error="error"
+      :progress="progress"
       :owner="repoInfo?.owner ?? ''"
       :repo="repoInfo?.repo ?? ''"
       :ref-name="repoInfo?.ref?.name ?? ''"
@@ -63,5 +64,9 @@ onUnmounted(() => {
 }
 @keyframes lp-spin {
   to { transform: rotate(360deg); }
+}
+@keyframes lp-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
 }
 </style>

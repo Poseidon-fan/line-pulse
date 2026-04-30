@@ -1,4 +1,12 @@
-import type { AnalyzeRequest, AnalyzeResponse, FilterAnalyzeRequest, RepoRef } from '@/utils/types';
+import type {
+  AnalyzePortMessage,
+  AnalyzePortRequest,
+  AnalyzeProgress,
+  AnalyzeRequest,
+  AnalyzeResponse,
+  FilterAnalyzeRequest,
+  RepoRef,
+} from '@/utils/types';
 import { githubToken } from '@/utils/storage';
 import { downloadRepoZip, getDefaultBranch } from '@/utils/github';
 import { unzip } from '@/utils/zip';
@@ -26,41 +34,76 @@ function getRequestKey(owner: string, repo: string, ref?: RepoRef): string {
 }
 
 export default defineBackground(() => {
+  // Streaming analyze: long-lived port with progress events.
+  browser.runtime.onConnect.addListener((port) => {
+    if (port.name !== 'analyze-repo') return;
+
+    let controller: AbortController | null = null;
+    let active = true;
+
+    const send = (msg: AnalyzePortMessage) => {
+      if (!active) return;
+      try {
+        port.postMessage(msg);
+      } catch { /* port already closed */ }
+    };
+
+    port.onDisconnect.addListener(() => {
+      active = false;
+      controller?.abort();
+    });
+
+    port.onMessage.addListener(async (raw: AnalyzePortRequest) => {
+      if (raw?.type !== 'start') return;
+      const payload = raw.payload;
+      const requestKey = getRequestKey(payload.owner, payload.repo, payload.ref);
+
+      // Cancel any other in-flight request for the same repo/ref.
+      inFlightRequests.get(requestKey)?.abort();
+      controller = new AbortController();
+      inFlightRequests.set(requestKey, controller);
+
+      const onProgress = (progress: AnalyzeProgress) => send({ type: 'progress', progress });
+
+      try {
+        const response = await handleAnalyze(payload, controller.signal, onProgress);
+        send({ type: 'result', response });
+      } catch (err: unknown) {
+        send({
+          type: 'result',
+          response: {
+            success: false,
+            error: err instanceof Error ? err.message : 'Unknown error',
+          },
+        });
+      } finally {
+        if (inFlightRequests.get(requestKey) === controller) {
+          inFlightRequests.delete(requestKey);
+        }
+        if (active) {
+          try { port.disconnect(); } catch { /* noop */ }
+        }
+      }
+    });
+  });
+
+  // Filter re-analysis: simple request/response, runs on already-cached files.
   browser.runtime.onMessage.addListener(
-    (msg: { type: string; payload: AnalyzeRequest | FilterAnalyzeRequest }, _sender, sendResponse) => {
-      if (msg?.type === 'analyze-repo') {
-        const payload = msg.payload as AnalyzeRequest;
-        const { owner, repo, ref } = payload;
-        const requestKey = getRequestKey(owner, repo, ref);
-
-        // Cancel any in-flight request for the same repo/ref
-        inFlightRequests.get(requestKey)?.abort();
-
-        const controller = new AbortController();
-        inFlightRequests.set(requestKey, controller);
-
-        handleAnalyze(payload, controller.signal)
-          .finally(() => {
-            if (inFlightRequests.get(requestKey) === controller) {
-              inFlightRequests.delete(requestKey);
-            }
-          })
-          .then(sendResponse);
-
-        return true;
-      }
-
+    (msg: { type: string; payload: FilterAnalyzeRequest }, _sender, sendResponse) => {
       if (msg?.type === 'filter-analyze') {
-        handleFilterAnalyze(msg.payload as FilterAnalyzeRequest).then(sendResponse);
+        handleFilterAnalyze(msg.payload).then(sendResponse);
         return true;
       }
-
       return false;
     },
   );
 });
 
-async function handleAnalyze(payload: AnalyzeRequest, signal: AbortSignal): Promise<AnalyzeResponse> {
+async function handleAnalyze(
+  payload: AnalyzeRequest,
+  signal: AbortSignal,
+  onProgress: (p: AnalyzeProgress) => void,
+): Promise<AnalyzeResponse> {
   const { owner, repo } = payload;
 
   const debug = import.meta.env.DEV;
@@ -71,6 +114,7 @@ async function handleAnalyze(payload: AnalyzeRequest, signal: AbortSignal): Prom
 
     let ref = payload.ref;
     if (!ref) {
+      onProgress({ stage: 'resolving' });
       const branchResult = await getDefaultBranch(owner, repo, token, signal);
       if ('error' in branchResult) {
         return { success: false, error: branchResult.error };
@@ -92,12 +136,14 @@ async function handleAnalyze(payload: AnalyzeRequest, signal: AbortSignal): Prom
     }
 
     // Download
+    onProgress({ stage: 'downloading', loaded: 0 });
     const downloadResult = await downloadRepoZip(
       owner,
       repo,
       ref,
       token,
       signal,
+      ({ loaded, total }) => onProgress({ stage: 'downloading', loaded, total }),
     );
     if ('error' in downloadResult) {
       return { success: false, error: downloadResult.error };
@@ -105,6 +151,7 @@ async function handleAnalyze(payload: AnalyzeRequest, signal: AbortSignal): Prom
     if (debug) console.log(`[Line Pulse] Download: ${(performance.now() - t0).toFixed(0)}ms`);
 
     // Unzip
+    onProgress({ stage: 'unzipping' });
     const files = unzip(downloadResult.data);
     const fileCount = Object.keys(files).length;
     if (fileCount === 0) {
@@ -114,6 +161,7 @@ async function handleAnalyze(payload: AnalyzeRequest, signal: AbortSignal): Prom
     if (debug) console.log(`[Line Pulse] Unzip: ${(performance.now() - t0).toFixed(0)}ms (${fileCount} files)`);
 
     // Analyze
+    onProgress({ stage: 'analyzing', fileCount });
     const stats = await analyzeWithWasm(files);
     if (debug) console.log(`[Line Pulse] Total: ${(performance.now() - t0).toFixed(0)}ms`);
 
@@ -122,9 +170,7 @@ async function handleAnalyze(payload: AnalyzeRequest, signal: AbortSignal): Prom
       data: { owner, repo, ref, stats },
     };
 
-    // Cache successful result
     await setCache(cacheKey, response);
-
     return response;
   } catch (err: unknown) {
     if (signal.aborted) {

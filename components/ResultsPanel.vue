@@ -1,16 +1,18 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { CircleAlert, RefreshCw, Filter, ChevronDown, ChevronUp } from 'lucide-vue-next';
-import type { RepoRefType, Stats, FilterPattern } from '@/utils/types';
+import type { AnalyzeProgress, RepoRefType, Stats, FilterPattern } from '@/utils/types';
 import type { AnalysisStatus } from '@/composables/useAnalysis';
 import { FILTER_PRESETS } from '@/utils/filter-presets';
 import StatsGrid from './StatsGrid.vue';
 import LanguageBar from './LanguageBar.vue';
+import ProgressIndicator from './ProgressIndicator.vue';
 
 const props = defineProps<{
   status: AnalysisStatus;
   stats: Stats | null;
   error: string | null;
+  progress: AnalyzeProgress | null;
   owner: string;
   repo: string;
   refName: string;
@@ -71,14 +73,10 @@ function clearFilter() {
     class="absolute top-full left-0 z-[9999] w-[340px] font-lp-sans bg-lp-bg border border-lp-border rounded-xl shadow-[0_16px_48px_rgba(0,0,0,0.2),0_0_0_1px_rgba(0,0,0,0.05)] p-5 mt-3 text-lp-fg animate-[lp-slide-up_0.3s_ease]"
   >
     <!-- Loading -->
-    <div v-if="status === 'loading'" class="text-center py-8 px-5">
-      <div class="w-9 h-9 mx-auto mb-4 relative">
-        <div class="absolute inset-0 border-3 border-lp-bar-bg rounded-full" />
-        <div class="absolute inset-0 border-3 border-lp-accent rounded-full border-t-transparent animate-[lp-spin_0.8s_linear_infinite]" />
-      </div>
-      <p class="m-0 text-lp-fg-secondary text-sm font-medium">Analyzing repository...</p>
-      <p class="mt-2 text-lp-fg-secondary text-xs opacity-70">Downloading &amp; processing code</p>
-    </div>
+    <ProgressIndicator
+      v-if="status === 'loading'"
+      :progress="progress"
+    />
 
     <!-- Error -->
     <div v-else-if="status === 'error'" class="text-center p-5 bg-lp-error/10 rounded-[10px] border border-lp-error/25">

@@ -33,6 +33,20 @@ export interface AnalyzeRequest {
   force?: boolean;
 }
 
+export type AnalyzeProgress =
+  | { stage: 'resolving' }
+  | { stage: 'downloading'; loaded: number; total?: number }
+  | { stage: 'unzipping' }
+  | { stage: 'analyzing'; fileCount: number };
+
+/** Messages sent from background → content over the analyze port. */
+export type AnalyzePortMessage =
+  | { type: 'progress'; progress: AnalyzeProgress }
+  | { type: 'result'; response: AnalyzeResponse };
+
+/** Messages sent from content → background over the analyze port. */
+export type AnalyzePortRequest = { type: 'start'; payload: AnalyzeRequest };
+
 export type AnalyzeResponse =
   | { success: true; data: { owner: string; repo: string; ref: RepoRef; stats: Stats } }
   | { success: false; error: string };
