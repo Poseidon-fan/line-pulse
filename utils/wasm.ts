@@ -43,6 +43,17 @@ const { Analyzer, __wbg_set_wasm } = wasmBindings as WasmBindings;
 
 let wasmReady: Promise<void> | null = null;
 
+export function createEmptyStats(): Stats {
+  return {
+    files: 0,
+    totalCode: 0,
+    totalComments: 0,
+    totalBlanks: 0,
+    totalLines: 0,
+    languages: [],
+  };
+}
+
 async function ensureWasmReady(): Promise<void> {
   if (wasmReady) return wasmReady;
 
@@ -82,12 +93,17 @@ export async function analyzeWithWasm(
   files: Record<string, string>,
   onProgress?: AnalyzeProgressCallback,
 ): Promise<Stats> {
+  const paths = Object.keys(files);
+  if (paths.length === 0) {
+    onProgress?.(0, 0);
+    return createEmptyStats();
+  }
+
   await ensureWasmReady();
 
   const analyzer = new Analyzer();
   let resultJson: string;
   try {
-    const paths = Object.keys(files);
     const total = paths.length;
     let lastReport = 0;
 

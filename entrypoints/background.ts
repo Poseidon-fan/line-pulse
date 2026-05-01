@@ -160,9 +160,6 @@ async function handleAnalyze(
     onProgress({ stage: 'unzipping' });
     const files = unzip(downloadResult.data);
     const fileCount = Object.keys(files).length;
-    if (fileCount === 0) {
-      return { success: false, error: 'No files extracted' };
-    }
     setRawFileCache(cacheKey, files);
     if (debug) console.log(`[Line Pulse] Unzip: ${(performance.now() - t0).toFixed(0)}ms (${fileCount} files)`);
 
@@ -196,18 +193,19 @@ async function handleFilterAnalyze(payload: FilterAnalyzeRequest): Promise<Analy
   const { owner, repo, ref, filter } = payload;
   const cacheKey = getRequestKey(owner, repo, ref);
 
-  const cached = rawFileCache.get(cacheKey);
-  if (!cached) {
-    return { success: false, error: 'Raw files not in memory. Please re-analyze the repository.' };
-  }
-
   try {
-    const filtered = filterFiles(cached.files, filter);
-    const fileCount = Object.keys(filtered).length;
-    if (fileCount === 0) {
-      return { success: false, error: 'No files match the current filter.' };
+    let files = rawFileCache.get(cacheKey)?.files;
+    if (!files) {
+      const token = await githubToken.getValue();
+      const downloadResult = await downloadRepoZip(owner, repo, ref, token);
+      if ('error' in downloadResult) {
+        return { success: false, error: downloadResult.error };
+      }
+      files = unzip(downloadResult.data);
+      setRawFileCache(cacheKey, files);
     }
 
+    const filtered = filterFiles(files, filter);
     const stats = await analyzeWithWasm(filtered);
     return { success: true, data: { owner, repo, ref, stats } };
   } catch (err: unknown) {
