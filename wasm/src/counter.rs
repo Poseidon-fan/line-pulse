@@ -87,9 +87,7 @@ impl<'a> Counter<'a> {
                 return;
             }
             if !line_has_important_syntax(trimmed, self.syntax) {
-                if self.syntax.is_literate
-                    || starts_with_any(trimmed, self.syntax.line_comments)
-                {
+                if self.syntax.is_literate || starts_with_any(trimmed, self.syntax.line_comments) {
                     counts.comments += 1;
                 } else {
                     counts.code += 1;
@@ -115,11 +113,10 @@ impl<'a> Counter<'a> {
             // A line that started inside a (non-doc) string literal counts as
             // code unless the entire trimmed line was only string body.
             counts.code += 1;
-        } else if started_in_block {
-            counts.comments += 1;
-        } else if line_is_only_block_close {
-            counts.comments += 1;
-        } else if whole_line_is_comment(trimmed, self.syntax) {
+        } else if started_in_block
+            || line_is_only_block_close
+            || whole_line_is_comment(trimmed, self.syntax)
+        {
             counts.comments += 1;
         } else {
             counts.code += 1;
@@ -298,9 +295,7 @@ fn whole_line_is_comment(trimmed: &[u8], syntax: &LangSyntax) -> bool {
     for (s, e) in all_blocks {
         let sb = s.as_bytes();
         let eb = e.as_bytes();
-        if trimmed.len() >= sb.len() + eb.len()
-            && trimmed.starts_with(sb)
-            && trimmed.ends_with(eb)
+        if trimmed.len() >= sb.len() + eb.len() && trimmed.starts_with(sb) && trimmed.ends_with(eb)
         {
             return true;
         }

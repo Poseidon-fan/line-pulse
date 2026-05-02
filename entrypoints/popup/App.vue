@@ -2,12 +2,7 @@
 import { ref, onMounted, onUnmounted } from 'vue';
 import { Settings, BarChart3, LayoutGrid, Clock, Activity } from 'lucide-vue-next';
 import { githubToken, analysisTimeout } from '@/utils/storage';
-import {
-  clearHistory,
-  getHistory,
-  removeHistory,
-  watchHistory,
-} from '@/utils/history';
+import { clearHistory, getHistory, removeHistory, watchHistory } from '@/utils/history';
 import type { HistoryEntry } from '@/utils/types';
 import FeatureCard from '@/components/FeatureCard.vue';
 import FormInput from '@/components/FormInput.vue';
@@ -41,7 +36,9 @@ async function saveSettings() {
   await analysisTimeout.setValue(timeout.value);
   saved.value = true;
   if (savedTimer) clearTimeout(savedTimer);
-  savedTimer = setTimeout(() => { saved.value = false; }, 2000);
+  savedTimer = setTimeout(() => {
+    saved.value = false;
+  }, 2000);
 }
 
 async function onRemoveHistory(entry: HistoryEntry) {
@@ -62,7 +59,10 @@ async function onClearHistory() {
     <div class="flex justify-between items-center mb-5">
       <div class="flex items-center gap-2.5">
         <Activity :size="28" class="text-lp-accent" />
-        <span class="text-lg font-semibold bg-gradient-to-br from-lp-accent to-lp-accent-hover bg-clip-text text-transparent">Line Pulse</span>
+        <span
+          class="text-lg font-semibold bg-gradient-to-br from-lp-accent to-lp-accent-hover bg-clip-text text-transparent"
+          >Line Pulse</span
+        >
       </div>
       <button
         class="bg-transparent border-none cursor-pointer p-2 rounded-lg text-lp-fg-secondary transition-all duration-200 hover:bg-lp-border hover:text-lp-fg"
@@ -127,8 +127,12 @@ async function onClearHistory() {
         />
 
         <div class="flex items-center gap-2 p-3 bg-lp-accent/8 rounded-lg mt-1">
-          <span class="text-[11px] font-semibold py-0.5 px-2 bg-lp-accent text-white rounded">Tip</span>
-          <span class="text-xs text-lp-fg-secondary">Results appear below the button on GitHub</span>
+          <span class="text-[11px] font-semibold py-0.5 px-2 bg-lp-accent text-white rounded"
+            >Tip</span
+          >
+          <span class="text-xs text-lp-fg-secondary"
+            >Results appear below the button on GitHub</span
+          >
         </div>
       </div>
     </div>
@@ -148,7 +152,13 @@ body {
 }
 
 @keyframes slideDown {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 </style>

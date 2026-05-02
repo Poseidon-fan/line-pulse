@@ -82,14 +82,27 @@ bun run build:firefox
 
 `bun run dev` / `bun run build` will automatically generate the WASM bundle into `wasm/pkg`.
 
+### Code Quality
+
+```bash
+# Run TypeScript, ESLint, Prettier, rustfmt, and Clippy checks
+bun run check
+
+# Format JS/TS/Vue/CSS/Markdown files
+bun run format
+
+# Auto-fix ESLint issues when possible
+bun run lint:fix
+```
+
 ## Tech Stack
 
-| Layer | Technology |
-|-------|------------|
-| Extension Framework | [WXT](https://wxt.dev/) |
-| UI | Vue 3 + TypeScript |
-| Analysis Engine | Rust (WASM) |
-| ZIP Processing | [fflate](https://github.com/101arrowz/fflate) |
+| Layer               | Technology                                    |
+| ------------------- | --------------------------------------------- |
+| Extension Framework | [WXT](https://wxt.dev/)                       |
+| UI                  | Vue 3 + TypeScript                            |
+| Analysis Engine     | Rust (WASM)                                   |
+| ZIP Processing      | [fflate](https://github.com/101arrowz/fflate) |
 
 ## License
 

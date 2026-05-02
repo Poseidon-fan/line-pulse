@@ -55,6 +55,8 @@ const view = computed<StageView>(() => {
       };
     }
   }
+
+  return { title: 'Starting...', detail: '', ratio: null };
 });
 
 const stages = ['resolving', 'downloading', 'unzipping', 'analyzing'] as const;
@@ -75,11 +77,7 @@ const stageIndex = computed(() => {
         class="absolute inset-0 border-3 border-lp-accent rounded-full border-t-transparent animate-[lp-spin_0.8s_linear_infinite]"
       />
       <!-- Determinate ring (download with content-length) -->
-      <svg
-        v-else
-        viewBox="0 0 36 36"
-        class="absolute inset-0 -rotate-90"
-      >
+      <svg v-else viewBox="0 0 36 36" class="absolute inset-0 -rotate-90">
         <circle
           cx="18"
           cy="18"
@@ -90,16 +88,13 @@ const stageIndex = computed(() => {
           class="text-lp-accent"
           :stroke-dasharray="`${view.ratio * 100}, 100`"
           stroke-linecap="round"
-          style="transition: stroke-dasharray 0.2s ease-out;"
+          style="transition: stroke-dasharray 0.2s ease-out"
         />
       </svg>
     </div>
 
     <p class="m-0 text-lp-fg text-sm font-medium">{{ view.title }}</p>
-    <p
-      v-if="view.detail"
-      class="mt-1 text-lp-fg-secondary text-xs tabular-nums"
-    >
+    <p v-if="view.detail" class="mt-1 text-lp-fg-secondary text-xs tabular-nums">
       {{ view.detail }}
     </p>
 

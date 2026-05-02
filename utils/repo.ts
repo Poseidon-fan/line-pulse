@@ -1,12 +1,37 @@
 import type { AnalyzeRequest, RepoRef, RepoRefType } from './types';
 
 const GITHUB_RESERVED = new Set([
-  'settings', 'organizations', 'orgs', 'about', 'features',
-  'security', 'pricing', 'enterprise', 'team', 'customer-stories',
-  'readme', 'explore', 'topics', 'trending', 'collections',
-  'events', 'sponsors', 'login', 'join', 'new', 'notifications',
-  'marketplace', 'codespaces', 'issues', 'pulls', 'discussions',
-  'search', 'stars', 'dashboard', 'watching', 'account',
+  'settings',
+  'organizations',
+  'orgs',
+  'about',
+  'features',
+  'security',
+  'pricing',
+  'enterprise',
+  'team',
+  'customer-stories',
+  'readme',
+  'explore',
+  'topics',
+  'trending',
+  'collections',
+  'events',
+  'sponsors',
+  'login',
+  'join',
+  'new',
+  'notifications',
+  'marketplace',
+  'codespaces',
+  'issues',
+  'pulls',
+  'discussions',
+  'search',
+  'stars',
+  'dashboard',
+  'watching',
+  'account',
 ]);
 
 const SUPPORTED_REPO_ROUTES = new Set(['tree']);
@@ -35,22 +60,27 @@ function getRepoPathInfo() {
 }
 
 function getEmbeddedPayload(): Record<string, unknown> | null {
-  const script = document.querySelector<HTMLScriptElement>('script[data-target="react-app.embeddedData"]');
+  const script = document.querySelector<HTMLScriptElement>(
+    'script[data-target="react-app.embeddedData"]',
+  );
   if (!script?.textContent) return null;
 
   try {
     const data = JSON.parse(script.textContent) as { payload?: unknown };
     return typeof data.payload === 'object' && data.payload !== null
-      ? data.payload as Record<string, unknown>
+      ? (data.payload as Record<string, unknown>)
       : null;
   } catch {
     return null;
   }
 }
 
-function getNestedRecord(parent: Record<string, unknown>, key: string): Record<string, unknown> | null {
+function getNestedRecord(
+  parent: Record<string, unknown>,
+  key: string,
+): Record<string, unknown> | null {
   const value = parent[key];
-  return typeof value === 'object' && value !== null ? value as Record<string, unknown> : null;
+  return typeof value === 'object' && value !== null ? (value as Record<string, unknown>) : null;
 }
 
 function getEmbeddedRefInfo(payload: Record<string, unknown>): EmbeddedRefInfo | null {
@@ -73,7 +103,7 @@ function getEmbeddedRepoInfo(payload: Record<string, unknown>): EmbeddedRepoInfo
   if (!layoutRoute) return null;
 
   const repo = layoutRoute.repo;
-  return typeof repo === 'object' && repo !== null ? repo as EmbeddedRepoInfo : null;
+  return typeof repo === 'object' && repo !== null ? (repo as EmbeddedRepoInfo) : null;
 }
 
 function normalizeRefType(
@@ -101,7 +131,8 @@ function getRefFromEmbeddedData(): RepoRef | undefined {
 
   const repoInfo = getEmbeddedRepoInfo(payload);
   const currentOid = typeof refInfo.currentOid === 'string' ? refInfo.currentOid : undefined;
-  const defaultBranch = typeof repoInfo?.defaultBranch === 'string' ? repoInfo.defaultBranch : undefined;
+  const defaultBranch =
+    typeof repoInfo?.defaultBranch === 'string' ? repoInfo.defaultBranch : undefined;
 
   return {
     name: refInfo.name,
@@ -136,9 +167,11 @@ export function findCodeButton(): HTMLButtonElement | null {
   if (precise) return precise;
 
   // Fallback: text scan within <main> only
-  return Array.from(scope.querySelectorAll<HTMLButtonElement>('button')).find(
-    (el) => el.textContent?.trim() === 'Code',
-  ) ?? null;
+  return (
+    Array.from(scope.querySelectorAll<HTMLButtonElement>('button')).find(
+      (el) => el.textContent?.trim() === 'Code',
+    ) ?? null
+  );
 }
 
 export function getRepoInfo(): AnalyzeRequest | null {
@@ -150,4 +183,3 @@ export function getRepoInfo(): AnalyzeRequest | null {
     ? { owner: pathInfo.owner, repo: pathInfo.repo, ref }
     : { owner: pathInfo.owner, repo: pathInfo.repo };
 }
-

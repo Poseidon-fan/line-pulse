@@ -22,10 +22,7 @@ function pctOfLanguage(value: number): string {
 <template>
   <div>
     <div class="flex items-center gap-2 mb-1.5">
-      <span
-        class="w-2.5 h-2.5 rounded-[3px] shrink-0"
-        :style="{ background: color }"
-      />
+      <span class="w-2.5 h-2.5 rounded-[3px] shrink-0" :style="{ background: color }" />
       <span class="text-[13px] font-medium text-lp-fg flex-1 truncate">{{ name }}</span>
       <span class="text-[12px] text-lp-fg-secondary tabular-nums">
         {{ getPct(lines, totalLines) }}

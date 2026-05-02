@@ -1,12 +1,8 @@
 import type { RepoRef } from './types';
 
-export type DownloadResult =
-  | { data: Uint8Array }
-  | { error: string };
+export type DownloadResult = { data: Uint8Array } | { error: string };
 
-export type DefaultBranchResult =
-  | { defaultBranch: string }
-  | { error: string };
+export type DefaultBranchResult = { defaultBranch: string } | { error: string };
 
 function getApiHeaders(token: string): Record<string, string> {
   const headers: Record<string, string> = {
@@ -36,7 +32,7 @@ export async function getDefaultBranch(
     });
 
     if (response.ok) {
-      const data = await response.json() as { default_branch?: unknown };
+      const data = (await response.json()) as { default_branch?: unknown };
       if (typeof data.default_branch === 'string' && data.default_branch) {
         return { defaultBranch: data.default_branch };
       }
@@ -46,13 +42,19 @@ export async function getDefaultBranch(
     if (response.status === 401 || response.status === 403) {
       return token
         ? { error: 'Access denied. Please check your GitHub token permissions or rate limit.' }
-        : { error: 'GitHub API access denied or rate limited. Set your GitHub token in the extension popup and try again.' };
+        : {
+            error:
+              'GitHub API access denied or rate limited. Set your GitHub token in the extension popup and try again.',
+          };
     }
 
     if (response.status === 404) {
       return token
         ? { error: 'Repository not found or access denied.' }
-        : { error: 'Repository not found. If this is a private repo, set your GitHub token in the extension popup.' };
+        : {
+            error:
+              'Repository not found. If this is a private repo, set your GitHub token in the extension popup.',
+          };
     }
 
     return { error: 'Could not determine default branch.' };
@@ -77,11 +79,12 @@ export async function downloadRepoZip(
   signal?: AbortSignal,
   onProgress?: (p: DownloadProgress) => void,
 ): Promise<DownloadResult> {
-  const archivePath = ref.type === 'branch'
-    ? `refs/heads/${ref.name}`
-    : ref.type === 'tag'
-      ? `refs/tags/${ref.name}`
-      : ref.name;
+  const archivePath =
+    ref.type === 'branch'
+      ? `refs/heads/${ref.name}`
+      : ref.type === 'tag'
+        ? `refs/tags/${ref.name}`
+        : ref.name;
 
   try {
     const url = `https://codeload.github.com/${owner}/${repo}/zip/${archivePath}`;
@@ -97,7 +100,10 @@ export async function downloadRepoZip(
     }
 
     if (response.status === 401 || response.status === 403) {
-      return { error: 'Access denied. Please set your GitHub token in the extension popup for private repositories.' };
+      return {
+        error:
+          'Access denied. Please set your GitHub token in the extension popup for private repositories.',
+      };
     }
   } catch (err: unknown) {
     if (err instanceof DOMException && err.name === 'AbortError') {
@@ -106,7 +112,10 @@ export async function downloadRepoZip(
   }
 
   if (!token) {
-    return { error: 'Repository not found. If this is a private repo, set your GitHub token in the extension popup.' };
+    return {
+      error:
+        'Repository not found. If this is a private repo, set your GitHub token in the extension popup.',
+    };
   }
   return { error: 'Could not download repository.' };
 }
@@ -149,7 +158,11 @@ async function readBodyWithProgress(
       }
     }
   } catch (err) {
-    try { reader.cancel(); } catch { /* noop */ }
+    try {
+      reader.cancel();
+    } catch {
+      /* noop */
+    }
     throw err;
   }
 

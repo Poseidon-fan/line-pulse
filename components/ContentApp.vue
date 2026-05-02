@@ -11,10 +11,23 @@ const props = defineProps<{
   shadowHost: HTMLElement;
 }>();
 
-const { status, stats, repoInfo, error, panelOpen, progress, isFiltered, startAnalysis, applyFilter, closePanel } = useAnalysis();
+const {
+  status,
+  stats,
+  repoInfo,
+  error,
+  panelOpen,
+  progress,
+  isFiltered,
+  startAnalysis,
+  applyFilter,
+  closePanel,
+} = useAnalysis();
 
-const { register: registerClickOutside, unregister: unregisterClickOutside } =
-  useClickOutside(() => props.shadowHost, closePanel);
+const { register: registerClickOutside, unregister: unregisterClickOutside } = useClickOutside(
+  () => props.shadowHost,
+  closePanel,
+);
 
 function onAnalyze() {
   const repo = getRepoInfo();
@@ -36,10 +49,7 @@ onUnmounted(() => {
 
 <template>
   <div class="relative inline-flex">
-    <LinePulseButton
-      :loading="status === 'loading'"
-      @analyze="onAnalyze"
-    />
+    <LinePulseButton :loading="status === 'loading'" @analyze="onAnalyze" />
     <ResultsPanel
       v-if="panelOpen"
       :status="status"
@@ -59,14 +69,27 @@ onUnmounted(() => {
 
 <style>
 @keyframes lp-slide-up {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 @keyframes lp-spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 @keyframes lp-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.35; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
 }
 </style>

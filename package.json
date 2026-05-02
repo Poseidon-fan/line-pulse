@@ -12,6 +12,15 @@
     "build:firefox": "bun run wasm:build && wxt build -b firefox",
     "zip": "bun run wasm:build && wxt zip",
     "zip:firefox": "bun run wasm:build && wxt zip -b firefox",
+    "typecheck": "bun run wasm:build && vue-tsc --noEmit -p tsconfig.json",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "rust:fmt": "cargo fmt --manifest-path wasm/Cargo.toml",
+    "rust:fmt:check": "cargo fmt --manifest-path wasm/Cargo.toml -- --check",
+    "rust:clippy": "cargo clippy --manifest-path wasm/Cargo.toml --target wasm32-unknown-unknown -- -D warnings",
+    "check": "bun run typecheck && bun run lint && bun run format:check && bun run rust:fmt:check && bun run rust:clippy",
     "postinstall": "wxt prepare"
   },
   "dependencies": {
@@ -21,10 +30,18 @@
     "vue": "^3.5.25"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@tailwindcss/vite": "^4.2.2",
     "@types/picomatch": "^4.0.3",
     "@wxt-dev/module-vue": "^1.0.3",
+    "eslint": "^10.3.0",
+    "eslint-plugin-vue": "^10.9.0",
+    "globals": "^17.6.0",
+    "prettier": "^3.8.3",
     "typescript": "^5.9.3",
+    "typescript-eslint": "^8.59.1",
+    "vue-eslint-parser": "^10.4.0",
+    "vue-tsc": "^3.2.7",
     "wxt": "^0.20.6"
   }
 }

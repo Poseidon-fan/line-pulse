@@ -48,18 +48,12 @@ export async function getHistory(): Promise<HistoryEntry[]> {
 export async function addHistory(entry: HistoryEntry): Promise<void> {
   const list = await historyStore.getValue();
   const key = entryKey(entry.owner, entry.repo, entry.ref);
-  const filtered = list.filter(
-    (e) => entryKey(e.owner, e.repo, e.ref) !== key,
-  );
+  const filtered = list.filter((e) => entryKey(e.owner, e.repo, e.ref) !== key);
   filtered.unshift(entry);
   await historyStore.setValue(filtered.slice(0, MAX_ENTRIES));
 }
 
-export async function removeHistory(
-  owner: string,
-  repo: string,
-  ref: RepoRef,
-): Promise<void> {
+export async function removeHistory(owner: string, repo: string, ref: RepoRef): Promise<void> {
   const list = await historyStore.getValue();
   const key = entryKey(owner, repo, ref);
   const filtered = list.filter((e) => entryKey(e.owner, e.repo, e.ref) !== key);
@@ -73,9 +67,7 @@ export async function clearHistory(): Promise<void> {
 }
 
 /** Subscribe to history changes (used by popup to react to background writes). */
-export function watchHistory(
-  cb: (entries: HistoryEntry[]) => void,
-): () => void {
+export function watchHistory(cb: (entries: HistoryEntry[]) => void): () => void {
   return historyStore.watch((value) => cb(value ?? []));
 }
 
@@ -121,7 +113,5 @@ export function formatRelativeTime(timestamp: number, now = Date.now()): string 
   const currentYear = new Date(now).getFullYear();
   const month = (date.getMonth() + 1).toString().padStart(2, '0');
   const day2 = date.getDate().toString().padStart(2, '0');
-  return year === currentYear
-    ? `${month}-${day2}`
-    : `${year}-${month}-${day2}`;
+  return year === currentYear ? `${month}-${day2}` : `${year}-${month}-${day2}`;
 }

@@ -4,10 +4,7 @@ import { onUnmounted } from 'vue';
  * Manages click-outside detection for Shadow DOM elements.
  * Uses `composedPath()` to correctly detect clicks that cross the shadow boundary.
  */
-export function useClickOutside(
-  getHost: () => HTMLElement,
-  onClickOutside: () => void,
-) {
+export function useClickOutside(getHost: () => HTMLElement, onClickOutside: () => void) {
   let handler: ((e: MouseEvent) => void) | null = null;
 
   function register() {

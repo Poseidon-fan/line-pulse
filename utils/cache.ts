@@ -15,7 +15,10 @@ export async function getCache(key: string): Promise<AnalyzeResponse | null> {
   return entry.response;
 }
 
-export async function setCache(key: string, response: AnalyzeResponse & { success: true }): Promise<void> {
+export async function setCache(
+  key: string,
+  response: AnalyzeResponse & { success: true },
+): Promise<void> {
   const cache = await analysisCache.getValue();
   cache[key] = { response, timestamp: Date.now() };
 

@@ -90,7 +90,7 @@ function getRefLabel(refName: string, refType: RepoRefType): string {
   return refType === 'commit' ? refName.slice(0, 7) : refName;
 }
 
-function applyPreset(preset: typeof FILTER_PRESETS[number]) {
+function applyPreset(preset: (typeof FILTER_PRESETS)[number]) {
   if (activePreset.value === preset.label) {
     activePreset.value = null;
     includeInput.value = '';
@@ -106,8 +106,14 @@ function applyPreset(preset: typeof FILTER_PRESETS[number]) {
 
 function applyFilter() {
   activePreset.value = null;
-  const include = includeInput.value.split(',').map((s) => s.trim()).filter(Boolean);
-  const exclude = excludeInput.value.split(',').map((s) => s.trim()).filter(Boolean);
+  const include = includeInput.value
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const exclude = excludeInput.value
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
   if (include.length === 0 && exclude.length === 0) {
     emit('filter', null);
   } else {
@@ -132,13 +138,13 @@ function clearFilter() {
     @keyup.stop
   >
     <!-- Loading -->
-    <ProgressIndicator
-      v-if="status === 'loading'"
-      :progress="progress"
-    />
+    <ProgressIndicator v-if="status === 'loading'" :progress="progress" />
 
     <!-- Error -->
-    <div v-else-if="status === 'error'" class="text-center p-5 bg-lp-error/10 rounded-[10px] border border-lp-error/25">
+    <div
+      v-else-if="status === 'error'"
+      class="text-center p-5 bg-lp-error/10 rounded-[10px] border border-lp-error/25"
+    >
       <CircleAlert :size="32" class="mx-auto mb-3 text-lp-error" />
       <p class="text-lp-error m-0 mb-2 text-sm font-medium">Analysis Failed</p>
       <p class="text-lp-fg-secondary m-0 text-[13px]">{{ error }}</p>
@@ -159,7 +165,8 @@ function clearFilter() {
             class="min-w-0 truncate text-[13px] text-lp-fg-secondary"
             :title="`${owner}/${repo}`"
           >
-            <strong class="text-lp-fg font-semibold">{{ owner }}</strong>/{{ repo }}
+            <strong class="text-lp-fg font-semibold">{{ owner }}</strong
+            >/{{ repo }}
           </span>
           <span
             v-if="refName"
@@ -174,9 +181,11 @@ function clearFilter() {
           <div class="relative">
             <button
               class="p-1.5 bg-transparent border-none rounded-md cursor-pointer transition-colors"
-              :class="exportOpen
-                ? 'text-lp-accent bg-lp-accent/10'
-                : 'text-lp-fg-secondary hover:text-lp-fg hover:bg-lp-card-bg'"
+              :class="
+                exportOpen
+                  ? 'text-lp-accent bg-lp-accent/10'
+                  : 'text-lp-fg-secondary hover:text-lp-fg hover:bg-lp-card-bg'
+              "
               title="Export"
               @click="toggleExport"
             >
@@ -196,7 +205,13 @@ function clearFilter() {
                   :size="12"
                   :class="copyState === 'success' ? 'text-lp-accent' : 'text-lp-fg-secondary'"
                 />
-                <span>{{ copyState === 'success' ? 'Copied!' : copyState === 'error' ? 'Copy failed' : 'Copy as Markdown' }}</span>
+                <span>{{
+                  copyState === 'success'
+                    ? 'Copied!'
+                    : copyState === 'error'
+                      ? 'Copy failed'
+                      : 'Copy as Markdown'
+                }}</span>
               </button>
               <div class="my-1 border-t border-lp-border" />
               <button
@@ -242,11 +257,12 @@ function clearFilter() {
         >
           <Filter :size="13" class="text-lp-fg-secondary shrink-0" />
           <span class="text-xs font-medium text-lp-fg-secondary flex-1">Filter paths</span>
-          <span
-            v-if="isFiltered"
-            class="w-1.5 h-1.5 rounded-full bg-lp-accent shrink-0"
+          <span v-if="isFiltered" class="w-1.5 h-1.5 rounded-full bg-lp-accent shrink-0" />
+          <component
+            :is="filterOpen ? ChevronUp : ChevronDown"
+            :size="13"
+            class="text-lp-fg-secondary shrink-0"
           />
-          <component :is="filterOpen ? ChevronUp : ChevronDown" :size="13" class="text-lp-fg-secondary shrink-0" />
         </button>
 
         <!-- Expanded content -->
@@ -269,7 +285,9 @@ function clearFilter() {
               class="w-full py-1.5 px-2.5 text-xs bg-lp-card-bg border border-lp-border rounded-md text-lp-fg placeholder:text-lp-fg-secondary/50 outline-none transition-colors focus:border-lp-accent"
             />
           </div>
-          <p class="text-[10px] text-lp-fg-secondary/60 m-0">Comma-separated globs. Use ** for recursive match.</p>
+          <p class="text-[10px] text-lp-fg-secondary/60 m-0">
+            Comma-separated globs. Use ** for recursive match.
+          </p>
 
           <!-- Presets -->
           <div class="flex flex-wrap gap-1.5">
@@ -277,9 +295,11 @@ function clearFilter() {
               v-for="preset in FILTER_PRESETS"
               :key="preset.label"
               class="px-2 py-1 text-[11px] rounded-full border cursor-pointer transition-colors"
-              :class="activePreset === preset.label
-                ? 'border-lp-accent bg-lp-accent/10 text-lp-accent'
-                : 'border-lp-border bg-lp-card-bg text-lp-fg-secondary hover:border-lp-accent hover:text-lp-accent'"
+              :class="
+                activePreset === preset.label
+                  ? 'border-lp-accent bg-lp-accent/10 text-lp-accent'
+                  : 'border-lp-border bg-lp-card-bg text-lp-fg-secondary hover:border-lp-accent hover:text-lp-accent'
+              "
               @click.prevent.stop="applyPreset(preset)"
             >
               {{ preset.label }}

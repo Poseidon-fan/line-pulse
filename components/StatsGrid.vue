@@ -17,9 +17,12 @@ const cards: Card[] = [
 
 function getValue(key: Card['key']): string {
   switch (key) {
-    case 'lines': return formatNumber(props.stats.totalLines);
-    case 'files': return formatNumber(props.stats.files);
-    case 'languages': return formatNumber(props.stats.languages.length);
+    case 'lines':
+      return formatNumber(props.stats.totalLines);
+    case 'files':
+      return formatNumber(props.stats.files);
+    case 'languages':
+      return formatNumber(props.stats.languages.length);
   }
 }
 </script>

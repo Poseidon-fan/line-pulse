@@ -21,7 +21,11 @@ export function streamAnalyzeRequest(
     const finish = (r: AnalyzeResponse) => {
       if (settled) return;
       settled = true;
-      try { port.disconnect(); } catch { /* noop */ }
+      try {
+        port.disconnect();
+      } catch {
+        /* noop */
+      }
       resolve(r);
     };
 

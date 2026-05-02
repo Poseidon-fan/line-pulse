@@ -28,13 +28,14 @@ const displayEntries = computed<DisplayEntry[]>(() => {
   const now = Date.now();
   return props.entries.map((entry) => {
     const topTotal = entry.topLanguages.reduce((s, l) => s + l.code, 0);
-    const segments = topTotal > 0
-      ? entry.topLanguages.map((l) => ({
-          color: l.color,
-          widthPct: (l.code / topTotal) * 100,
-          name: l.name,
-        }))
-      : [];
+    const segments =
+      topTotal > 0
+        ? entry.topLanguages.map((l) => ({
+            color: l.color,
+            widthPct: (l.code / topTotal) * 100,
+            name: l.name,
+          }))
+        : [];
 
     return {
       raw: entry,
@@ -94,7 +95,8 @@ function onRemove(event: MouseEvent, entry: HistoryEntry) {
         <!-- Title row -->
         <div class="flex items-center gap-1.5 mb-1.5 min-w-0">
           <span class="min-w-0 truncate text-[12px] text-lp-fg-secondary">
-            <strong class="text-lp-fg font-semibold">{{ entry.raw.owner }}</strong>/{{ entry.raw.repo }}
+            <strong class="text-lp-fg font-semibold">{{ entry.raw.owner }}</strong
+            >/{{ entry.raw.repo }}
           </span>
           <span
             class="shrink-0 px-1.5 py-px rounded bg-lp-bg border border-lp-border text-[9px] uppercase tracking-wide text-lp-fg-secondary"
@@ -102,7 +104,10 @@ function onRemove(event: MouseEvent, entry: HistoryEntry) {
           >
             {{ refLabel(entry.raw) }}
           </span>
-          <ExternalLink :size="11" class="shrink-0 text-lp-fg-secondary/40 group-hover:text-lp-accent transition-colors" />
+          <ExternalLink
+            :size="11"
+            class="shrink-0 text-lp-fg-secondary/40 group-hover:text-lp-accent transition-colors"
+          />
           <button
             class="shrink-0 ml-auto p-1 rounded text-lp-fg-secondary/60 bg-transparent border-none cursor-pointer opacity-0 group-hover:opacity-100 transition-all hover:text-lp-error hover:bg-lp-error/10"
             title="Remove from history"

@@ -29,9 +29,7 @@ function setRawFileCache(key: string, files: Record<string, string>): void {
 }
 
 function getRequestKey(owner: string, repo: string, ref?: RepoRef): string {
-  return ref
-    ? `${owner}/${repo}@${ref.type}:${ref.name}`
-    : `${owner}/${repo}@default`;
+  return ref ? `${owner}/${repo}@${ref.type}:${ref.name}` : `${owner}/${repo}@default`;
 }
 
 export default defineBackground(() => {
@@ -46,7 +44,9 @@ export default defineBackground(() => {
       if (!active) return;
       try {
         port.postMessage(msg);
-      } catch { /* port already closed */ }
+      } catch {
+        /* port already closed */
+      }
     };
 
     port.onDisconnect.addListener(() => {
@@ -82,7 +82,11 @@ export default defineBackground(() => {
           inFlightRequests.delete(requestKey);
         }
         if (active) {
-          try { port.disconnect(); } catch { /* noop */ }
+          try {
+            port.disconnect();
+          } catch {
+            /* noop */
+          }
         }
       }
     });
@@ -161,7 +165,10 @@ async function handleAnalyze(
     const files = unzip(downloadResult.data);
     const fileCount = Object.keys(files).length;
     setRawFileCache(cacheKey, files);
-    if (debug) console.log(`[Line Pulse] Unzip: ${(performance.now() - t0).toFixed(0)}ms (${fileCount} files)`);
+    if (debug)
+      console.log(
+        `[Line Pulse] Unzip: ${(performance.now() - t0).toFixed(0)}ms (${fileCount} files)`,
+      );
 
     // Analyze
     onProgress({ stage: 'analyzing', processed: 0, total: fileCount });

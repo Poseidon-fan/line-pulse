@@ -11,8 +11,12 @@ export const FILTER_PRESETS: FilterPreset[] = [
     filter: {
       include: [],
       exclude: [
-        '**/test/**', '**/tests/**', '**/__tests__/**',
-        '**/*.test.*', '**/*.spec.*', '**/*_test.*',
+        '**/test/**',
+        '**/tests/**',
+        '**/__tests__/**',
+        '**/*.test.*',
+        '**/*.spec.*',
+        '**/*_test.*',
       ],
     },
   },
@@ -21,8 +25,12 @@ export const FILTER_PRESETS: FilterPreset[] = [
     filter: {
       include: [],
       exclude: [
-        '**/vendor/**', '**/node_modules/**', '**/third_party/**',
-        '**/third-party/**', '**/external/**', '**/deps/**',
+        '**/vendor/**',
+        '**/node_modules/**',
+        '**/third_party/**',
+        '**/third-party/**',
+        '**/external/**',
+        '**/deps/**',
       ],
     },
   },

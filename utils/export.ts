@@ -121,9 +121,12 @@ export function toCSV(ctx: ExportContext): string {
 
 export function exportToString(ctx: ExportContext, format: ExportFormat): string {
   switch (format) {
-    case 'markdown': return toMarkdown(ctx);
-    case 'json': return toJSON(ctx);
-    case 'csv': return toCSV(ctx);
+    case 'markdown':
+      return toMarkdown(ctx);
+    case 'json':
+      return toJSON(ctx);
+    case 'csv':
+      return toCSV(ctx);
   }
 }
 

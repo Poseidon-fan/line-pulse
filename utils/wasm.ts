@@ -1,6 +1,6 @@
 import type { Stats } from '@/utils/types';
 import initWasmModule from '../wasm/pkg/line_pulse_wasm_bg.wasm?init';
-// @ts-ignore wasm-bindgen does not generate a declaration file for this helper module.
+// @ts-expect-error wasm-bindgen does not generate a declaration file for this helper module.
 import * as wasmBindings from '../wasm/pkg/line_pulse_wasm_bg.js';
 
 interface WasmLanguageStats {
@@ -126,7 +126,11 @@ export async function analyzeWithWasm(
     resultJson = analyzer.finalize();
   } catch (err) {
     // On the error path the analyzer is still alive — release it explicitly.
-    try { analyzer.free(); } catch { /* noop */ }
+    try {
+      analyzer.free();
+    } catch {
+      /* noop */
+    }
     throw err;
   }
 
