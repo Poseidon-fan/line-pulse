@@ -21,7 +21,22 @@
     "rust:fmt:check": "cargo fmt --manifest-path wasm/Cargo.toml -- --check",
     "rust:clippy": "cargo clippy --manifest-path wasm/Cargo.toml --target wasm32-unknown-unknown -- -D warnings",
     "check": "bun run typecheck && bun run lint && bun run format:check && bun run rust:fmt:check && bun run rust:clippy",
-    "postinstall": "wxt prepare"
+    "postinstall": "wxt prepare && simple-git-hooks"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "bunx lint-staged"
+  },
+  "lint-staged": {
+    "*.{ts,vue,js,mjs,cjs}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,css,html,yml,yaml}": [
+      "prettier --write"
+    ],
+    "wasm/**/*.rs": [
+      "rustfmt --edition 2024"
+    ]
   },
   "dependencies": {
     "fflate": "^0.8.2",
@@ -37,7 +52,9 @@
     "eslint": "^10.3.0",
     "eslint-plugin-vue": "^10.9.0",
     "globals": "^17.6.0",
+    "lint-staged": "^17.0.2",
     "prettier": "^3.8.3",
+    "simple-git-hooks": "^2.13.1",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.59.1",
     "vue-eslint-parser": "^10.4.0",
