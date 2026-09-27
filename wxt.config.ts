@@ -7,6 +7,9 @@ export default defineConfig({
   vite: () => ({
     plugins: [tailwindcss()],
   }),
+  zip: {
+    excludeSources: ['wasm/target/**', 'wasm/pkg/**'],
+  },
   manifest: {
     name: 'GitHub Line Pulse',
     description: 'Quickly count GitHub repo lines of code',

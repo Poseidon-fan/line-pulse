@@ -41,6 +41,11 @@ Sometimes you just want to quickly know the size of a GitHub repository — how 
 - 🔒 **Private & Local** — All analysis runs locally in your browser. No data sent to any server
 - 🚀 **Powered by Rust** — High-performance WASM-based code analysis engine
 
+## Installation
+
+Download the package for your browser from [GitHub Releases](https://github.com/Poseidon-fan/line-pulse/releases).
+Expand **Assets** under a published release to find the browser ZIPs.
+
 ## Usage
 
 1. Visit any public GitHub repository
@@ -101,6 +106,25 @@ preserving dependency versions. Commit these files together with `package.json`.
 Development, build, ZIP, and typecheck commands check version consistency before compiling WASM.
 CI also checks it before setting up Rust. These checks fail on mismatches without modifying files;
 version synchronization is an explicit step when preparing a release.
+
+### Draft Releases
+
+The **Release** workflow prepares a GitHub release draft in either of these cases:
+
+- A push to `master` changes `package.json.version`. Changes to other package fields do not trigger packaging.
+- You select **Actions → Release → Run workflow** and choose the branch to build, normally `master`.
+
+The workflow checks version consistency and code quality, then builds the Chrome and Firefox ZIPs.
+It creates a draft named `v<version>` with generated release notes and both browser packages,
+targeting the exact commit that was built. It uses the built-in `GITHUB_TOKEN` with `contents: write`;
+no additional release secret is required.
+
+To publish, open [GitHub Releases](https://github.com/Poseidon-fan/line-pulse/releases), edit the draft,
+review the notes and ZIPs, and click **Publish release**. The workflow always leaves this final step to you.
+
+Rerunning the workflow for an existing draft replaces its browser ZIPs and preserves edited release notes.
+An already published version is rejected; prepare a new version to release another build.
+If a version tag already exists, it must point to the commit being built.
 
 ### Code Quality
 

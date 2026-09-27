@@ -1,0 +1,131 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - package.json
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  prepare:
+    name: Detect release version
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.version.outputs.changed }}
+      version: ${{ steps.version.outputs.version }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.6
+
+      - name: Check version consistency
+        run: bun run version:check
+
+      - name: Detect version change
+        id: version
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const { readFileSync } = require('node:fs');
+            const { version } = JSON.parse(readFileSync('package.json', 'utf8'));
+            const before = context.payload.before;
+            let previousVersion;
+
+            if (context.eventName === 'push' && before && !/^0+$/.test(before)) {
+              const tree = await exec.getExecOutput(
+                'git', ['ls-tree', '--name-only', before, '--', 'package.json'],
+                { silent: true },
+              );
+              if (tree.stdout.trim()) {
+                const previous = await exec.getExecOutput(
+                  'git', ['show', `${before}:package.json`], { silent: true },
+                );
+                previousVersion = JSON.parse(previous.stdout).version;
+              }
+            }
+
+            const changed = context.eventName === 'workflow_dispatch' || version !== previousVersion;
+            core.setOutput('changed', changed);
+            core.setOutput('version', version);
+            core.info(changed ? `Prepare draft v${version}` : `Version is unchanged: ${version}`);
+
+  release:
+    name: Package and create draft
+    needs: prepare
+    if: needs.prepare.outputs.changed == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    concurrency:
+      group: draft-release-${{ needs.prepare.outputs.version }}
+      cancel-in-progress: false
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.6
+
+      - name: Setup Rust
+        run: |
+          rustup toolchain install stable --profile minimal --target wasm32-unknown-unknown
+          rustup default stable
+
+      - name: Cache Cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            wasm/target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('wasm/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Install wasm-pack
+        run: |
+          if ! command -v wasm-pack >/dev/null 2>&1; then
+            cargo install wasm-pack --version 0.14.0 --locked
+          fi
+          wasm-pack --version
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Run checks
+        run: bun run check
+
+      - name: Package Chrome and Firefox
+        run: |
+          bun run zip
+          bun run zip:firefox
+
+      - name: Create or update draft release
+        uses: actions/github-script@v8
+        env:
+          RELEASE_VERSION: ${{ needs.prepare.outputs.version }}
+        with:
+          script: |
+            const { pathToFileURL } = require('node:url');
+            const scriptUrl = pathToFileURL(`${process.env.GITHUB_WORKSPACE}/scripts/release.mjs`);
+            const { createDraftRelease } = await import(scriptUrl.href);
+            await createDraftRelease({ github, context, core, version: process.env.RELEASE_VERSION });
