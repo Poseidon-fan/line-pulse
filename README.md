@@ -82,6 +82,26 @@ bun run build:firefox
 
 `bun run dev` / `bun run build` will automatically generate the WASM bundle into `wasm/pkg`.
 
+### Version Management
+
+`package.json` is the source of truth for the product version. WXT derives the extension
+manifest version from it, and the popup displays the installed manifest's `version_name`
+(falling back to `version`). The Rust package uses the same product version.
+
+To prepare a version change, edit `version` in `package.json`, then run:
+
+```bash
+bun run version:sync
+bun run version:check
+```
+
+The sync command updates `wasm/Cargo.toml` and the local package entry in `wasm/Cargo.lock`,
+preserving dependency versions. Commit these files together with `package.json`.
+
+Development, build, ZIP, and typecheck commands check version consistency before compiling WASM.
+CI also checks it before setting up Rust. These checks fail on mismatches without modifying files;
+version synchronization is an explicit step when preparing a release.
+
 ### Code Quality
 
 ```bash

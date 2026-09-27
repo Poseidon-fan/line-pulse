@@ -9,6 +9,8 @@ import FormInput from '@/components/FormInput.vue';
 import HistoryList from '@/components/HistoryList.vue';
 import '@/assets/tailwind.css';
 
+const manifest = browser.runtime.getManifest();
+const version = manifest.version_name ?? manifest.version;
 const showSettings = ref(false);
 const token = ref('');
 const timeout = ref(15);
@@ -139,7 +141,7 @@ async function onClearHistory() {
 
     <!-- Footer -->
     <div class="mt-4 pt-3 border-t border-lp-border text-center">
-      <span class="text-[11px] text-lp-fg-secondary">v1.0.0</span>
+      <span class="text-[11px] text-lp-fg-secondary">v{{ version }}</span>
     </div>
   </div>
 </template>
